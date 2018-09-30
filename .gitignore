@@ -30,3 +30,22 @@
 *.exe
 *.out
 *.app
+
+# Visual Studio generated files
+*.ib_pdb_index
+*.idb
+*.ilk
+*.pdb
+# *.sln
+*.suo
+*.vcproj
+*vcproj.*.*.user
+*.ncb
+*.sdf
+*.opensdf
+#*.vcxproj
+*vcxproj.*
+.vs
+x64/
+**/PLC.tlog/**
+**/PLC.log
