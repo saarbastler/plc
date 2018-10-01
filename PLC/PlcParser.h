@@ -100,42 +100,41 @@ protected:
     ParserResult parserResult;
     for (;;)
     {
-      parseTerm(expression->right());
+      plc::Term term;
+      parseTerm(term);
 
       if (parser.next(parserResult).type() == ParserResult::Type::Char &&
         (parserResult.intValue() == ';' || parserResult.intValue() == ')'))
       {
-        if(!expression->left())
-          expression->left().swap(expression->right());
+        expression->terms().emplace_back(std::move(term));
 
         parser.push(parserResult);
         break;
       }
 
       plc::Expression::Operator op = toOperator(parserResult);
-
-      if (expression->left())
+      if (!*expression || expression->op() == op)
       {
-        if (expression->op() <= op)
-        {
-          std::unique_ptr<plc::Expression> tmp(new plc::Expression(expression->right(), op));
+        expression->op() = op;
+        expression->terms().emplace_back(std::move(term));
+      }
+      else if(expression->op() < op)
+      {
+        std::unique_ptr<plc::Expression> tmp(new plc::Expression(term, op));
 
-          parseExpression(tmp);
-          expression->right()= tmp;
+        parseExpression(tmp);
 
-          break;
-        }
-        else
-        {
-          std::unique_ptr<plc::Expression> tmp(new plc::Expression());
-          tmp.swap(expression);
-          expression->left()= tmp;
-          expression->op() = op;
-        }
+        plc::Term otherTerm(tmp);
+        expression->terms().emplace_back(std::move(otherTerm));
+        break;
       }
       else
       {
-        expression->left().swap(expression->right());
+        expression->terms().emplace_back(std::move(term));
+
+        plc::Term firstTerm(expression);
+        expression.reset(new plc::Expression(firstTerm));
+
         expression->op() = op;
       }
     }

@@ -25,6 +25,12 @@ namespace plc
       None, Not
     };
 
+    Term() { }
+    Term(std::unique_ptr<Expression>& expression)
+    {
+      *this = expression;
+    }
+
     void swap(Term& other)
     {
       Type tmp = type_;
@@ -114,35 +120,29 @@ namespace plc
     Expression() {}
     Expression(Term& left)
     {
-      left_.swap(left);
+      terms_.emplace_back(std::move(left));
     }
 
     Expression(Term& left, Operator op)
     {
-      left_.swap(left);
+      terms_.emplace_back(std::move(left));
       operator_ = op;
     }
 
     void clear()
     {
-      left_.clear();
+      terms_.clear();
       operator_ = Operator::None;
-      right_.clear();
     }
 
     operator bool() const
     {
-      return left_ & (operator_ != Operator::None) & right_;
+      return !terms_.empty() & (operator_ != Operator::None);
     }
 
-    Term& left()
+    std::vector<Term>& terms()
     {
-      return left_;
-    }
-
-    Term& right()
-    {
-      return right_;
+      return terms_;
     }
 
     Operator& op()
@@ -152,9 +152,8 @@ namespace plc
 
   private:
 
-    Term left_;
     Operator operator_= Operator::None;
-    Term right_;
+    std::vector<Term> terms_;
 
   };
 }
