@@ -301,6 +301,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PLC.cpp" />
+    <ClCompile Include="PlcExpression.cpp" />
     <ClCompile Include="Tests\TestParserInput.cpp" />
     <ClCompile Include="Tests\TestParser.cpp" />
     <ClCompile Include="Tests\TestPlcParser.cpp" />
@@ -309,6 +310,7 @@
   <ItemGroup>
     <ClInclude Include="ParserInput.h" />
     <ClInclude Include="ParserResult.h" />
+    <ClInclude Include="PlcAst.h" />
     <ClInclude Include="PlcExpression.h" />
     <ClInclude Include="PlcParser.h" />
     <ClInclude Include="Stack.h" />

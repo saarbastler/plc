@@ -8,15 +8,13 @@
 
 #include "Parser.h"
 #include "Variable.h"
-#include "PlcExpression.h"
+#include "PlcAst.h"
 
 template<unsigned CHAR_STACKSIZE, unsigned PARSER_STACKSIZE>
 class PlcParser
 {
 public:
-  using VariableDescription = std::unordered_map<std::string, Variable>;
-
-  PlcParser(Parser<CHAR_STACKSIZE,PARSER_STACKSIZE>& parser) : parser(parser) {}
+  PlcParser(Parser<CHAR_STACKSIZE,PARSER_STACKSIZE>& parser, PlcAst& plcAst) : parser(parser), plcAst(plcAst) {}
 
   void parse()
   {
@@ -45,11 +43,6 @@ public:
     }
   }
 
-  bool variableExists(const std::string& name)
-  {
-    return variableDescription.find(name) != variableDescription.end();
-  }
-
 protected:
 
   void parseTerm(plc::Term& term)
@@ -57,7 +50,7 @@ protected:
     ParserResult parserResult;
     if (parser.next(parserResult).type() == ParserResult::Type::Identifier)
     {
-      if (!variableExists(parserResult.text()))
+      if (!plcAst.variableExists(parserResult.text()))
         throw ParserException("Variable '%s' does not exist", parserResult.text().c_str());
 
       term = parserResult.text();
@@ -106,7 +99,7 @@ protected:
       if (parser.next(parserResult).type() == ParserResult::Type::Char &&
         (parserResult.intValue() == ';' || parserResult.intValue() == ')'))
       {
-        expression->terms().emplace_back(std::move(term));
+        expression->addTerm(term);
 
         parser.push(parserResult);
         break;
@@ -116,7 +109,7 @@ protected:
       if (!*expression || expression->op() == op)
       {
         expression->op() = op;
-        expression->terms().emplace_back(std::move(term));
+        expression->addTerm(term);
       }
       else if(expression->op() < op)
       {
@@ -125,12 +118,12 @@ protected:
         parseExpression(tmp);
 
         plc::Term otherTerm(tmp);
-        expression->terms().emplace_back(std::move(otherTerm));
+        expression->addTerm(otherTerm);
         break;
       }
       else
       {
-        expression->terms().emplace_back(std::move(term));
+        expression->addTerm(term);
 
         plc::Term firstTerm(expression);
         expression.reset(new plc::Expression(firstTerm));
@@ -140,18 +133,19 @@ protected:
     }
   }
 
-  void parseEquation(const std::string& left)
+  void parseEquation(const std::string& name)
   {
     ParserResult parserResult;
     if (!parser.next(parserResult).is(ParserResult::Type::Char, '='))
-      throw ParserException("missing '=' after variable '%s' equation", left.c_str());
+      throw ParserException("missing '=' after variable '%s' equation", name.c_str());
 
     std::unique_ptr<plc::Expression> expression(new plc::Expression());
     parseExpression(expression);
     if (!parser.next(parserResult).is(ParserResult::Type::Char, ';'))
       throw ParserException("missing ';' after expression");
 
-    std::cout << left << " = " << expression << std::endl;
+    plc::Expression tmp(*expression.release());
+    plcAst.addEquation(name, tmp);
   }
 
   void parseVariables(Variable::Type type)
@@ -165,7 +159,7 @@ protected:
       if (parser.next(parserResult).type() != ParserResult::Type::Identifier)
         throw ParserException("missing identifier in variable declaration");
 
-      if (variableExists(parserResult.text()))
+      if (plcAst.variableExists(parserResult.text()))
         throw ParserException("Variable '%s' already declared", parserResult.text().c_str());
 
       ParserResult parserResult2;
@@ -174,7 +168,7 @@ protected:
       if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
         throw ParserException("missing integer value after Variable '%s'=", parserResult.text().c_str());
 
-      variableDescription.emplace(parserResult.text(), Variable(parserResult.text(), type,unsigned( parserResult2.intValue())));
+      plcAst.addVariable( Variable(parserResult.text(), type, unsigned( parserResult2.intValue())));
 
       if (parser.next(parserResult).is(ParserResult::Type::Char, ','))
         continue;
@@ -188,8 +182,24 @@ protected:
   }
   
   Parser<CHAR_STACKSIZE,PARSER_STACKSIZE>& parser;
-  VariableDescription variableDescription;
+  PlcAst& plcAst;
 };
+
+void plcParse(std::istream& in, PlcAst& plcAst)
+{
+  ParserInput<2> parserInput(in);
+  Parser<2, 2> parser(parserInput);
+  PlcParser<2, 2> plcParser(parser, plcAst);
+
+  plcParser.parse();
+}
+
+void plcParse(const char *text, PlcAst& plcAst)
+{
+  std::istringstream in(text);
+
+  plcParse(in, plcAst);
+}
 
 #endif // _INCLUDE_PLC_PARSER_H_
 

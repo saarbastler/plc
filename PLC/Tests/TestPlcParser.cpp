@@ -7,7 +7,7 @@ class PlcParserMock : public PlcParser<2, 3>
 {
 public:
 
-  PlcParserMock(Parser<2, 3>& parser) : PlcParser(parser) {}
+  PlcParserMock(Parser<2, 3>& parser, PlcAst& plcAst) : PlcParser(parser, plcAst) {}
 
   void parseTermMock(plc::Term& term)
   {
@@ -32,11 +32,6 @@ public:
   void parseVariablesMock(Variable::Type type)
   {
     parseVariables(type);
-  }
-
-  VariableDescription& getVariableDescription()
-  {
-    return variableDescription;
   }
 
 };
@@ -68,10 +63,11 @@ BOOST_AUTO_TEST_CASE(PlcParser_Term)
   std::istringstream in("abc !xyz 123");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("abc", Variable("abc", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("xyz", Variable("xyz", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("abc", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("xyz", Variable::Type::Input, 1));
 
   plc::Term term;
   BOOST_CHECK(!term);
@@ -94,11 +90,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence1)
   std::istringstream in("a | b & c;");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 
@@ -129,11 +126,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence2)
   std::istringstream in("(a | b) & c;");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 
@@ -165,11 +163,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence3)
   std::istringstream in("a & b | c;");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 
@@ -200,11 +199,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence4)
   std::istringstream in("a | (b & c);");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 
@@ -235,12 +235,13 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence5)
   std::istringstream in("a | b & c & d;");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
-  plcParser.getVariableDescription().emplace("d", Variable("d", Variable::Type::Input, 3));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("d", Variable::Type::Input, 3));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 
@@ -273,12 +274,13 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence6)
   std::istringstream in("a | b & c | d;");
   ParserInput<2> parserInput(in);
   Parser<2, 3> parser(parserInput);
-  PlcParserMock plcParser(parser);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
 
-  plcParser.getVariableDescription().emplace("a", Variable("a", Variable::Type::Input, 0));
-  plcParser.getVariableDescription().emplace("b", Variable("b", Variable::Type::Input, 1));
-  plcParser.getVariableDescription().emplace("c", Variable("c", Variable::Type::Input, 2));
-  plcParser.getVariableDescription().emplace("d", Variable("d", Variable::Type::Input, 3));
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("d", Variable::Type::Input, 3));
 
   std::unique_ptr<plc::Expression> expression(new plc::Expression());
 

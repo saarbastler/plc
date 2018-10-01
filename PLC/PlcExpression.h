@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <vector>
 
 namespace plc
 {
@@ -26,6 +27,8 @@ namespace plc
     };
 
     Term() { }
+    Term(const Term& other);
+
     Term(std::unique_ptr<Expression>& expression)
     {
       *this = expression;
@@ -66,6 +69,19 @@ namespace plc
       type_ = Type::Expression;
       expression_.swap(expression);
     }
+
+    void operator=(Term& other)
+    {
+      swap(other);
+    }
+
+    /*void operator=(const Term& other)
+    {
+      unary_ = other.unary_;
+      type_ = other.type_;
+      expression_.reset( new Expression(other.expression.get()));
+      identifier_= other.identifier_;
+    }*/
 
     operator bool() const
     {
@@ -118,15 +134,29 @@ namespace plc
     };
 
     Expression() {}
-    Expression(Term& left)
+
+    Expression(Expression& other)
     {
-      terms_.emplace_back(std::move(left));
+      swap(other);
     }
 
-    Expression(Term& left, Operator op)
+    Expression(Term& term)
     {
-      terms_.emplace_back(std::move(left));
+      addTerm(term);
+    }
+
+    Expression(Term& term, Operator op) : Expression(term)
+    {      
       operator_ = op;
+    }
+
+    void swap(Expression& other)
+    {
+      Operator tmp = operator_;
+      operator_ = other.operator_;
+      other.operator_ = tmp;
+
+      std::swap(terms_, other.terms_);
     }
 
     void clear()
@@ -140,7 +170,7 @@ namespace plc
       return !terms_.empty() & (operator_ != Operator::None);
     }
 
-    std::vector<Term>& terms()
+    const std::vector<Term>& terms() const
     {
       return terms_;
     }
@@ -148,6 +178,17 @@ namespace plc
     Operator& op()
     {
       return operator_;
+    }
+
+    Operator op() const
+    {
+      return operator_;
+    }
+
+    void addTerm(Term& term)
+    {
+      terms_.emplace_back();
+      terms_.back().swap(term);
     }
 
   private:
@@ -158,7 +199,7 @@ namespace plc
   };
 }
 
-std::ostream& operator << (std::ostream& out, const std::unique_ptr<plc::Expression>& expression);
+std::ostream& operator << (std::ostream& out, const plc::Expression& expression);
 std::ostream& operator << (std::ostream& out, const plc::Term& term);
 
 #endif // !_INCLUDE_PLC_EXPRESSION_H_
