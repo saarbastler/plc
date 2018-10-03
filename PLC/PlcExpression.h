@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 
 namespace plc
 {
@@ -75,14 +76,6 @@ namespace plc
       swap(other);
     }
 
-    /*void operator=(const Term& other)
-    {
-      unary_ = other.unary_;
-      type_ = other.type_;
-      expression_.reset( new Expression(other.expression.get()));
-      identifier_= other.identifier_;
-    }*/
-
     operator bool() const
     {
       return type_ != Type::Empty;
@@ -122,7 +115,7 @@ namespace plc
   };
 
   // Expression= Term
-  //           | Term op Term
+  //           | Term [op Term ]*
   class Expression
   {
   public:
@@ -205,7 +198,11 @@ namespace plc
 
       return true;
     }
-
+    
+    /// <summary>
+    /// Counts the number Expression levels.
+    /// </summary>
+    /// <returns>The enumber of levels</returns>
     unsigned countLevels() const
     {
       unsigned level = 0;
@@ -218,6 +215,27 @@ namespace plc
         }
 
       return 1 + level;
+    }
+    
+    /// <summary>
+    /// Counts the inputs, the map keys the input name to the number of occurence.
+    /// </summary>
+    /// <param name="inputs">The input count.</param>
+    void countInputs(std::unordered_map<std::string, unsigned>& inputs) const
+    {
+      for (const Term& term : terms_)
+        if (term.type() == Term::Type::Identifier)
+        {
+          auto count = inputs.find(term.identifier());
+          if (count == inputs.end())
+            inputs[term.identifier()] = 1;
+          else
+            (count->second)++;
+        }
+        else if (term.type() == Term::Type::Expression)
+        {
+          term.expression()->countInputs(inputs);
+        }
     }
 
   private:
