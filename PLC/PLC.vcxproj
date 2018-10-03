@@ -301,7 +301,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PLC.cpp" />
+    <ClCompile Include="plc2svg.cpp" />
     <ClCompile Include="PlcExpression.cpp" />
+    <ClCompile Include="svgHelper.cpp" />
     <ClCompile Include="Tests\TestParserInput.cpp" />
     <ClCompile Include="Tests\TestParser.cpp" />
     <ClCompile Include="Tests\TestPlcParser.cpp" />
@@ -310,11 +312,13 @@
   <ItemGroup>
     <ClInclude Include="ParserInput.h" />
     <ClInclude Include="ParserResult.h" />
+    <ClInclude Include="plc2svg.h" />
     <ClInclude Include="PlcAst.h" />
     <ClInclude Include="PlcExpression.h" />
     <ClInclude Include="PlcParser.h" />
     <ClInclude Include="Stack.h" />
     <ClInclude Include="Parser.h" />
+    <ClInclude Include="svgHelper.h" />
     <ClInclude Include="Variable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

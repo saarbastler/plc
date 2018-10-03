@@ -314,5 +314,111 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence6)
   BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].identifier(), "d");
 }
 
+BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels1)
+{
+  std::istringstream in("a;");
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
+
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+
+  std::unique_ptr<plc::Expression> expression(new plc::Expression());
+
+  plcParser.parseExpressionMock(expression);
+  BOOST_CHECK(*expression);
+  BOOST_CHECK_EQUAL(expression->countLevels(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels2)
+{
+  std::istringstream in("a | b | c;");
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
+
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+
+  std::unique_ptr<plc::Expression> expression(new plc::Expression());
+
+  BOOST_CHECK(!*expression);
+
+  plcParser.parseExpressionMock(expression);
+  BOOST_CHECK(*expression);
+  BOOST_CHECK_EQUAL(expression->countLevels(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels3)
+{
+  std::istringstream in("a | b & c;");
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
+
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+
+  std::unique_ptr<plc::Expression> expression(new plc::Expression());
+
+  BOOST_CHECK(!*expression);
+
+  plcParser.parseExpressionMock(expression);
+  BOOST_CHECK(*expression);
+  BOOST_CHECK_EQUAL(expression->countLevels(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels4)
+{
+  std::istringstream in("a | b & c | d;");
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
+
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("d", Variable::Type::Input, 3));
+
+  std::unique_ptr<plc::Expression> expression(new plc::Expression());
+
+  BOOST_CHECK(!*expression);
+
+  plcParser.parseExpressionMock(expression);
+  BOOST_CHECK(*expression);
+  BOOST_CHECK_EQUAL(expression->countLevels(), 3u);
+}
+
+BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels5)
+{
+  std::istringstream in("(a | b) & (c | d) & (e | f);");
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+  PlcAst plcAst;
+  PlcParserMock plcParser(parser, plcAst);
+
+  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
+  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
+  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
+  plcAst.addVariable(Variable("d", Variable::Type::Input, 3));
+  plcAst.addVariable(Variable("e", Variable::Type::Input, 4));
+  plcAst.addVariable(Variable("f", Variable::Type::Input, 5));
+
+  std::unique_ptr<plc::Expression> expression(new plc::Expression());
+
+  BOOST_CHECK(!*expression);
+
+  plcParser.parseExpressionMock(expression);
+  BOOST_CHECK(*expression);
+  BOOST_CHECK_EQUAL(expression->countLevels(), 2u);
+}
+
+
 #endif
 
