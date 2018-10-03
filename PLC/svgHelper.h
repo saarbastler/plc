@@ -11,6 +11,9 @@ namespace svg
   extern const char Y1[];
   extern const char X2[];
   extern const char Y2[];
+  extern const char CX[];
+  extern const char CY[];
+  extern const char R[];
   extern const char WIDTH[];
   extern const char HEIGHT[];
   extern const char SVG_CLASS[];
@@ -18,6 +21,7 @@ namespace svg
   extern const char RECT[];
   extern const char TEXT[];
   extern const char LINE[];
+  extern const char CIRCLE[];
 
   template<const char *NAME, typename T>
   class Attribute
@@ -48,6 +52,9 @@ namespace svg
   using AttributeY1 = Attribute<Y1, int>;
   using AttributeX2 = Attribute<X2, int>;
   using AttributeY2 = Attribute<Y2, int>;
+  using AttributeCX = Attribute<CX, int>;
+  using AttributeCY = Attribute<CY, int>;
+  using AttributeR = Attribute<R, int>;
   using AttributeWidth = Attribute<WIDTH, int>;
   using AttributeHeight = Attribute<HEIGHT, int>;
   using AttributeClass = Attribute<SVG_CLASS, const char *>;
@@ -136,6 +143,27 @@ namespace svg
     int x2;
     int y2;
   };
+
+  class Circle : public Element<CIRCLE>
+  {
+  public:
+    Circle(int cx, int cy, int r, const char *cssClass = nullptr) : Element<CIRCLE>(cssClass), cx(cx), cy(cy), r(r) { }
+
+    void print(std::ostream& out) const
+    {
+      Element<CIRCLE>::start(out);
+      out << AttributeCX(cx) << AttributeCY(cy) << AttributeR(r);
+
+      Element<CIRCLE>::startClose(out);
+    }
+
+  private:
+
+    int cx;
+    int cy;
+    int r;
+  };
+
   class Text : public ElementXY<TEXT>
   {
   public:
@@ -160,6 +188,7 @@ namespace svg
 std::ostream& operator << (std::ostream& out, const svg::Rect& elem);
 std::ostream& operator << (std::ostream& out, const svg::Text& elem);
 std::ostream& operator << (std::ostream& out, const svg::Line& elem);
+std::ostream& operator << (std::ostream& out, const svg::Circle& elem);
 
 #endif // !_INCLUDE_SVG_HELPER_H_
 
