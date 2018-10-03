@@ -167,7 +167,7 @@ namespace plc
 
     operator bool() const
     {
-      return !terms_.empty() & (operator_ != Operator::None);
+      return (terms_.size() == 1 && operator_ == Operator::None) || (!terms_.empty() && operator_ != Operator::None);
     }
 
     const std::vector<Term>& terms() const
@@ -189,6 +189,35 @@ namespace plc
     {
       terms_.emplace_back();
       terms_.back().swap(term);
+    }
+    
+    /// <summary>
+    /// A Term is simple, if there is no sub expression
+    /// </summary>
+    /// <returns>
+    ///   <c>true</c> if this instance is simple; otherwise, <c>false</c>.
+    /// </returns>
+    bool isSimple() const
+    {
+      for (auto&it : terms_)
+        if (it.type() != Term::Type::Identifier)
+          return false;
+
+      return true;
+    }
+
+    unsigned countLevels() const
+    {
+      unsigned level = 0;
+      for(const Term& term : terms_)
+        if (term.type() == Term::Type::Expression)
+        {
+          unsigned termLevel = term.expression()->countLevels();
+          if (termLevel > level)
+            level = termLevel;
+        }
+
+      return 1 + level;
     }
 
   private:

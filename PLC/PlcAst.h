@@ -80,6 +80,11 @@ public:
     equations_[name]= std::move(expression);
   }
 
+  const EquationType& equations() const
+  {
+    return equations_;
+  }
+
 protected:
 
   VariableDescriptionType variableDescription_;
