@@ -183,11 +183,14 @@ void Plc2svg::convert(const plc::Expression& expression)
   convert(1, 1, expression);
 
   out << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << std::endl
-    << "<svg xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns=\"http://www.w3.org/2000/svg\" "
+    << "<?xml-stylesheet type=\"text/css\" href=\"plc.css\"?>" << std::endl
+    << "<svg xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns=\"http://www.w3.org/2000/svg\" " //xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
     "width=\"800\" height=\"800\">" << std::endl
     << "<defs>" << std::endl;
 
-  out << "<style type=\"text/css\">" << std::endl
+  //out << "<script type = \"text/javascript\" xlink:href = \"plc.js\" xlink:actuate=\"onLoad\" xlink:show=\"other\" xlink:type=\"simple\"/>" << std::endl
+
+  /*out << "<style type=\"text/css\">" << std::endl
     << "<![CDATA[" << std::endl
     << "rect.box { stroke:#000; fill:none; }" << std::endl
     << "circle.invert { stroke:#000; fill:none; }" << std::endl
@@ -198,7 +201,7 @@ void Plc2svg::convert(const plc::Expression& expression)
     << "line.test { stroke:#f00; }" << std::endl
 
     << "]]>" << std::endl
-    << "</style>" << std::endl;
+    << "</style>" << std::endl;*/
 
   out << "<script type=\"text/javascript\"><![CDATA[" << std::endl
     << "document.addEventListener(\"DOMContentLoaded\", function ()" << std::endl

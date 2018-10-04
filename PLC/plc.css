@@ -1,0 +1,6 @@
+rect.box { stroke:#000; fill:none; }
+circle.invert { stroke:#000; fill:none; }
+circle.join { stroke:#000; fill:#000; }
+line.link { stroke:#000; stroke-width:1px; }
+line.on { stroke:#0f0; }
+line.test { stroke:#f00; }
