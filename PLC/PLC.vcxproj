@@ -314,8 +314,10 @@
     <ClInclude Include="ParserResult.h" />
     <ClInclude Include="plc2svg.h" />
     <ClInclude Include="PlcAst.h" />
+    <ClInclude Include="PlcCompiler.h" />
     <ClInclude Include="PlcExpression.h" />
     <ClInclude Include="PlcParser.h" />
+    <ClInclude Include="PlcSimulator.h" />
     <ClInclude Include="Stack.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="svgHelper.h" />

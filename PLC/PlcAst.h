@@ -63,7 +63,7 @@ public:
   const Variable& getVariable(const std::string& name) const
   {
     auto it = variableDescription_.find(name);
-    if (it == variableDescription_.end())
+    if( it == variableDescription_.end())
       throw PlcAstException("Variable '%s' does not exist", name.c_str());
 
     return it->second;
