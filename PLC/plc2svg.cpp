@@ -30,6 +30,7 @@ char Plc2svg::variableTypeIdentifier(Variable::Type type)
   }
 
 }
+
 const char *Plc2svg::variableCssClass(const Variable& variable)
 {
   std::ostringstream out;
@@ -120,6 +121,7 @@ unsigned Plc2svg::convert(unsigned ypos, unsigned level, const plc::Expression& 
   unsigned size = 0;
   unsigned index = 1;
   unsigned width = textWidth + (maxLevel - level) * (LINE_LENGTH + GATE_WIDTH) + LINE_LENGTH;
+  unsigned outy= (index + ypos) * CHAR_HEIGHT;
 
   for (const plc::Term& term : expression.terms())
   {
@@ -138,10 +140,6 @@ unsigned Plc2svg::convert(unsigned ypos, unsigned level, const plc::Expression& 
       {
         unsigned subSize= 2 + convert(index + ypos, level + 1, *term.expression());
 
-        svgOut << svg::Line(crossingWidth + width - LINE_LENGTH, y + CHAR_HEIGHT, crossingWidth + width, y + CHAR_HEIGHT, { LINK, gateCssClass(*term.expression()) });
-
-        expressionJsEquation(*term.expression());
-
         index += subSize;
         size += subSize;
       }
@@ -151,12 +149,12 @@ unsigned Plc2svg::convert(unsigned ypos, unsigned level, const plc::Expression& 
     }
   }
 
-  std::ostringstream gate;
-  gate << expression.id();
-
   svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
     << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, expression.op() == plc::Expression::Operator::And ? "&" : ">=1", {})
-    << svg::Text(crossingWidth + width, (2 + ypos) * CHAR_HEIGHT, gate.str().c_str(), {});
+
+   << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH, outy, { LINK, gateCssClass(expression) });
+
+  expressionJsEquation(expression);
 
   return size;
 }
@@ -196,6 +194,9 @@ void Plc2svg::convert(const plc::Expression& expression)
     << "circle.join { stroke:#000; fill:#000; }" << std::endl
     << "line.link { stroke:#000; stroke-width:1px; }" << std::endl
     << "line.on { stroke:#0f0; }" << std::endl
+
+    << "line.test { stroke:#f00; }" << std::endl
+
     << "]]>" << std::endl
     << "</style>" << std::endl;
 
