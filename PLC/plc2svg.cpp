@@ -204,11 +204,11 @@ void Plc2svg::convert(const plc::Expression& expression)
     << "document.addEventListener(\"DOMContentLoaded\", function ()" << std::endl
     << "{" << std::endl
     << "var i=new Array(";
-  
+
   for (auto it = inputs.begin(); it != inputs.end(); it++)
     out << "false,";
   out << ");" << std::endl
-  << "var g=new Array(";
+    << "var g=new Array(";
   for (unsigned i = 0; i <= plc::Expression::lastId(); i++)
     out << "false,";
   out << ");" << std::endl;
@@ -223,7 +223,7 @@ void Plc2svg::convert(const plc::Expression& expression)
     << "      obj.classList.remove('on');" << std::endl
     << "  });" << std::endl
     << "}" << std::endl;
-  
+
   out << "function logic()" << std::endl
     << "{" << std::endl
     << jsOut.str()
@@ -250,5 +250,6 @@ void Plc2svg::convert(const plc::Expression& expression)
   out << "});" << std::endl
     << "]]></script>" << std::endl
     << "</defs>" << std::endl
-    << svgOut.str();
+    << svgOut.str()
+    << "</svg>" << std::endl;
 }
