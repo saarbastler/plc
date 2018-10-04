@@ -1,12 +1,11 @@
 #ifndef _INCLUDE_PLC_SIMULATOR_H_
 #define _INCLUDE_PLC_SIMULATOR_H_
 
-#include <exception>
-#include <cstdarg>
 #include <array>
 #include <vector>
 
 #include "Stack.h"
+#include "PlcException.h"
 
 class IO
 {
@@ -24,31 +23,6 @@ public:
 
 private:
   bool value_ = 0;
-};
-
-class PlcSimulatorException : public std::exception
-{
-public:
-  PlcSimulatorException(const char *format, ...)
-  {
-    char buffer[1000];
-
-    std::va_list list;
-    va_start(list, format);
-    vsnprintf_s(buffer, sizeof(buffer) / sizeof(buffer[0]), format, list);
-    va_end(list);
-
-    message = buffer;
-  }
-
-  virtual char const* what() const
-  {
-    return message.c_str();
-  }
-
-private:
-
-  std::string message;
 };
 
 namespace plc
@@ -89,7 +63,7 @@ public:
     std::vector<std::unique_ptr<IO>>& ios = processImage[unsigned(type)];
 
     if (index >= ios.size())
-      throw PlcSimulatorException("index %d for type %d out out bounds (%d)"
+      throw PlcException("index %d for type %d out out bounds (%d)"
         , index, unsigned(type), ios.size());
 
     std::unique_ptr<IO>& io = ios[index];
@@ -154,7 +128,8 @@ public:
     }
 
     if (stack.size() != 1)
-      throw PlcSimulatorException("internal Error, stack size= %d", stack.size());
+      throw PlcException("internal Error, stack size= %d", stack.size());
+
     return stack.pop();
   }
 
