@@ -2,6 +2,7 @@
 #define _INCLUDE_SVG_HELPER_H_
 
 #include <iostream>
+#include <initializer_list>
 
 namespace svg
 {
@@ -17,6 +18,7 @@ namespace svg
   extern const char WIDTH[];
   extern const char HEIGHT[];
   extern const char SVG_CLASS[];
+  extern const char ID[];
 
   extern const char RECT[];
   extern const char TEXT[];
@@ -58,19 +60,39 @@ namespace svg
   using AttributeWidth = Attribute<WIDTH, int>;
   using AttributeHeight = Attribute<HEIGHT, int>;
   using AttributeClass = Attribute<SVG_CLASS, const char *>;
+  using AttributeId = Attribute<ID, const char *>;
 
   template<const char *NAME>
   class Element 
   {
   public:
 
-    Element(const char *cssClass = nullptr) : cssClass(cssClass) {}
+    Element(const std::initializer_list<const char *>& cssClass, const char *id= nullptr) : cssClass(cssClass), id(id) {}
 
     void start(std::ostream& out) const
     {
       out << '<' << NAME;
-      if( cssClass != nullptr)
-        out << AttributeClass(cssClass);
+
+      if (id != nullptr)
+        out << AttributeId(id);
+
+      if (cssClass.size() > 0)
+      {
+        out << ' ' << SVG_CLASS << '=' << '\"';
+
+        bool first = true;
+        for (auto it : cssClass)
+        {
+          if (first)
+            first = false;
+          else
+            out << ' ';
+
+          out << it;
+        }
+
+        out << '\"';
+      }
     }
 
     void startClose(std::ostream& out) const
@@ -84,14 +106,16 @@ namespace svg
     }
 
   private:
-    const char *cssClass;
+    const std::initializer_list<const char *>& cssClass;
+    const char *id = nullptr;
   };
 
   template<const char *NAME>
   class ElementXY : public Element<NAME>
   {
   public:
-    ElementXY(int x, int y, const char *cssClass = nullptr) : Element<NAME>(cssClass), x(x), y(y) {}
+    ElementXY(int x, int y, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : Element<NAME>(cssClass, id), x(x), y(y) {}
 
     void printBegin(std::ostream& out) const
     {
@@ -107,7 +131,8 @@ namespace svg
   class Rect : public ElementXY<RECT>
   {
   public:
-    Rect(int x, int y, int w, int h, const char *cssClass = nullptr) : ElementXY<RECT>(x, y, cssClass), w(w), h(h) { }
+    Rect(int x, int y, int w, int h, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : ElementXY<RECT>(x, y, cssClass, id), w(w), h(h) { }
 
     void print(std::ostream& out) const
     {
@@ -126,7 +151,8 @@ namespace svg
   class Line : public Element<LINE>
   {
   public:
-    Line(int x1, int y1, int x2, int y2, const char *cssClass = nullptr) : Element<LINE>(cssClass), x1(x1), y1(y1), x2(x2), y2(y2) { }
+    Line(int x1, int y1, int x2, int y2, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : Element<LINE>(cssClass, id), x1(x1), y1(y1), x2(x2), y2(y2) { }
 
     void print(std::ostream& out) const
     {
@@ -147,7 +173,8 @@ namespace svg
   class Circle : public Element<CIRCLE>
   {
   public:
-    Circle(int cx, int cy, int r, const char *cssClass = nullptr) : Element<CIRCLE>(cssClass), cx(cx), cy(cy), r(r) { }
+    Circle(int cx, int cy, int r, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : Element<CIRCLE>(cssClass, id), cx(cx), cy(cy), r(r) { }
 
     void print(std::ostream& out) const
     {
@@ -167,8 +194,10 @@ namespace svg
   class Text : public ElementXY<TEXT>
   {
   public:
-    Text(int x, int y, const char *text, const char *cssClass = nullptr) : ElementXY<TEXT>(x, y, cssClass), text(text), cssClass(cssClass) { }
-    Text(int x, int y, const std::string& text, const char *cssClass = nullptr) : Text(x, y, text.c_str(), cssClass) {}
+    Text(int x, int y, const char *text, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : ElementXY<TEXT>(x, y, cssClass, id), text(text) {}
+    Text(int x, int y, const std::string& text, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
+      : Text(x, y, text.c_str(), cssClass, id) {}
 
     void print(std::ostream& out) const
     {
@@ -181,8 +210,8 @@ namespace svg
   private:
 
     const char *text;
-    const char *cssClass;
   };
+
 }
 
 std::ostream& operator << (std::ostream& out, const svg::Rect& elem);

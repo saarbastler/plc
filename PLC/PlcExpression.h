@@ -126,14 +126,14 @@ namespace plc
       None, Or, And
     };
 
-    Expression() {}
+    Expression() : id_(idCounter++) {}
 
     Expression(Expression& other)
     {
       swap(other);
     }
 
-    Expression(Term& term)
+    Expression(Term& term) : Expression()
     {
       addTerm(term);
     }
@@ -149,6 +149,7 @@ namespace plc
       operator_ = other.operator_;
       other.operator_ = tmp;
 
+      std::swap(id_, other.id_);
       std::swap(terms_, other.terms_);
     }
 
@@ -238,11 +239,25 @@ namespace plc
         }
     }
 
+    unsigned id() const
+    {
+      return id_;
+    }
+
+    static unsigned lastId()
+    {
+      return idCounter;
+    }
+
   private:
 
     Operator operator_= Operator::None;
-    std::vector<Term> terms_;
-
+    std::vector<Term> terms_;    
+    /// <summary>
+    /// The unique identifier
+    /// </summary>
+    unsigned id_;
+    static unsigned idCounter;
   };
 }
 

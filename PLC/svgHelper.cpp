@@ -15,6 +15,7 @@ namespace svg
   const char WIDTH[] = "width";
   const char HEIGHT[] = "height";
   const char SVG_CLASS[] = "class";
+  const char ID[] = "id";
 
   const char RECT[] = "rect";
   const char LINE[] = "line";

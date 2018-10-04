@@ -1,6 +1,8 @@
 #include "PlcExpression.h"
 
 
+unsigned plc::Expression::idCounter = 0;
+
 std::ostream& operator << (std::ostream& out, const plc::Term& term)
 {
   out << "Term(";

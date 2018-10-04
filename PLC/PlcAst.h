@@ -60,6 +60,15 @@ public:
     variableDescription_.emplace(variable.name(), std::move(variable));
   }
 
+  const Variable& getVariable(const std::string& name) const
+  {
+    auto it = variableDescription_.find(name);
+    if (it == variableDescription_.end())
+      throw PlcAstException("Variable '%s' does not exist", name.c_str());
+
+    return it->second;
+  }
+
   const VariableDescriptionType& variableDescription() const
   {
     return variableDescription_;
@@ -77,7 +86,7 @@ public:
 
     std::cout << name << " = " << expression << std::endl;
 
-    equations_[name]= std::move(expression);
+    equations_[name] = std::move(expression);
   }
 
   const EquationType& equations() const
