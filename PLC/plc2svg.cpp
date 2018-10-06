@@ -3,22 +3,9 @@
 #include "plc2svg.h"
 #include "svgHelper.h"
 
-constexpr const char *BOX = "box";
-constexpr const char *VARIABLE = "variable";
-constexpr const char *LINK = "link";
-constexpr const char *INVERT = "invert";
-constexpr const char *JOIN = "join";
 
-constexpr const unsigned XSTART = 10;
-constexpr const unsigned CHAR_HEIGHT = 20;
-constexpr const unsigned CHAR_WIDTH = 10;
-constexpr const unsigned LINE_LENGTH = 50;
-constexpr const unsigned GATE_WIDTH = 75;
-constexpr const unsigned INVERT_RADIUS = 4;
-constexpr const unsigned CROSSING_WIDTH = 10;
-constexpr const unsigned JOIN_RADIUS = 2;
 
-char Plc2svg::variableTypeIdentifier(Variable::Type type)
+/*char Plc2svg::variableTypeIdentifier(Variable::Type type)
 {
   switch (type)
   {
@@ -188,20 +175,7 @@ void Plc2svg::convert(const plc::Expression& expression)
     "width=\"800\" height=\"800\">" << std::endl
     << "<defs>" << std::endl;
 
-  //out << "<script type = \"text/javascript\" xlink:href = \"plc.js\" xlink:actuate=\"onLoad\" xlink:show=\"other\" xlink:type=\"simple\"/>" << std::endl
-
-  /*out << "<style type=\"text/css\">" << std::endl
-    << "<![CDATA[" << std::endl
-    << "rect.box { stroke:#000; fill:none; }" << std::endl
-    << "circle.invert { stroke:#000; fill:none; }" << std::endl
-    << "circle.join { stroke:#000; fill:#000; }" << std::endl
-    << "line.link { stroke:#000; stroke-width:1px; }" << std::endl
-    << "line.on { stroke:#0f0; }" << std::endl
-
-    << "line.test { stroke:#f00; }" << std::endl
-
-    << "]]>" << std::endl
-    << "</style>" << std::endl;*/
+  //out << "<script type = \"text/javascript\" xlink:href = \"plc.js\" xlink:actuate=\"onLoad\" xlink:show=\"other\" xlink:type=\"simple\"/>" << std::endl  
 
   out << "<script type=\"text/javascript\"><![CDATA[" << std::endl
     << "document.addEventListener(\"DOMContentLoaded\", function ()" << std::endl
@@ -256,3 +230,4 @@ void Plc2svg::convert(const plc::Expression& expression)
     << svgOut.str()
     << "</svg>" << std::endl;
 }
+*/

@@ -11,6 +11,8 @@ Global
 		Debug|x86 = Debug|x86
 		DebugTests|x64 = DebugTests|x64
 		DebugTests|x86 = DebugTests|x86
+		Library|x64 = Library|x64
+		Library|x86 = Library|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 		Tests|x64 = Tests|x64
@@ -25,6 +27,10 @@ Global
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.DebugTests|x64.Build.0 = DebugTests|x64
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.DebugTests|x86.ActiveCfg = DebugTests|Win32
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.DebugTests|x86.Build.0 = DebugTests|Win32
+		{F184A237-F29D-48AB-B463-3C6D68C40032}.Library|x64.ActiveCfg = Library|x64
+		{F184A237-F29D-48AB-B463-3C6D68C40032}.Library|x64.Build.0 = Library|x64
+		{F184A237-F29D-48AB-B463-3C6D68C40032}.Library|x86.ActiveCfg = Library|Win32
+		{F184A237-F29D-48AB-B463-3C6D68C40032}.Library|x86.Build.0 = Library|Win32
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.Release|x64.ActiveCfg = Release|x64
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.Release|x64.Build.0 = Release|x64
 		{F184A237-F29D-48AB-B463-3C6D68C40032}.Release|x86.ActiveCfg = Release|Win32

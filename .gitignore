@@ -24,7 +24,7 @@
 *.lai
 *.la
 *.a
-*.lib
+#*.lib
 
 # Executables
 *.exe
@@ -49,3 +49,4 @@
 x64/
 **/PLC.tlog/**
 **/PLC.log
+!PLC/Library/x64/*.lib
