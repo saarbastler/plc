@@ -84,7 +84,7 @@ public:
     if (equationExists(name))
       throw PlcAstException("Equation for '%s' already exists.", name.c_str());
 
-    std::cout << name << " = " << expression << std::endl;
+    //std::cout << name << " = " << expression << std::endl;
 
     equations_[name] = std::move(expression);
   }
