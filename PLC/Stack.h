@@ -6,7 +6,7 @@
 
 class StackOverflowException : public std::exception
 {
-  virtual char const* what() const
+  virtual char const* what() const noexcept
   {
     return "StackOverflow";
   }
@@ -14,7 +14,7 @@ class StackOverflowException : public std::exception
 
 class StackEmptyException : public std::exception
 {
-  virtual char const* what() const
+  virtual char const* what() const noexcept
   {
     return "StackEmpty";
   }

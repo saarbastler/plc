@@ -4,6 +4,7 @@
 #include <sstream>
 #include <exception>
 #include <cstdarg>
+#include <stdio.h>
 
 #include "ParserInput.h"
 #include "ParserResult.h"
@@ -17,13 +18,13 @@ public:
 
     std::va_list list;
     va_start(list, format);
-    vsnprintf_s(buffer, sizeof(buffer) / sizeof(buffer[0]), format, list);
+    vsnprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, list);
     va_end(list);
 
     message = buffer;
   }
 
-  virtual char const* what() const
+  virtual char const* what() const noexcept
   {
     return message.c_str();
   }

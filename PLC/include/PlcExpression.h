@@ -14,9 +14,11 @@ namespace plc
   // Term= '(' Expression ')'
   //     | !Expression
   //     | Identifier
+
   class Term
   {
   public:
+
     enum class Type
     {
       Empty, Expression, Identifier
@@ -27,7 +29,9 @@ namespace plc
       None, Not
     };
 
-    Term() { }
+    Term()
+    {
+    }
     Term(const Term& other);
 
     Term(std::unique_ptr<Expression>& expression)
@@ -71,10 +75,7 @@ namespace plc
       expression_.swap(expression);
     }
 
-    void operator=(Term& other)
-    {
-      swap(other);
-    }
+    void operator=(const Term& other);
 
     operator bool() const
     {
@@ -91,7 +92,7 @@ namespace plc
       return unary_;
     }
 
-    Type type() const 
+    Type type() const
     {
       return type_;
     }
@@ -108,30 +109,34 @@ namespace plc
 
   private:
 
-    Unary unary_= Unary::None;
-    Type type_= Type::Empty;
+    Unary unary_ = Unary::None;
+    Type type_ = Type::Empty;
     std::unique_ptr<Expression> expression_;
     std::string identifier_;
   };
 
   // Expression= Term
   //           | Term [op Term ]*
+
   class Expression
   {
   public:
 
     // ordered by precedence, highest last
+
     enum class Operator
     {
       None, Or, And
     };
 
-    Expression() : id_(idCounter++) {}
+    Expression() : id_(idCounter++)
+    {
+    }
 
-    Expression(Expression& other)
+    /*Expression(Expression& other)
     {
       swap(other);
-    }
+    }*/
 
     Expression(Term& term) : Expression()
     {
@@ -139,11 +144,11 @@ namespace plc
     }
 
     Expression(Term& term, Operator op) : Expression(term)
-    {      
+    {
       operator_ = op;
     }
 
-    void swap(Expression& other)
+    void swap(Expression&& other)
     {
       Operator tmp = operator_;
       operator_ = other.operator_;
@@ -184,13 +189,14 @@ namespace plc
       terms_.emplace_back();
       terms_.back().swap(term);
     }
-    
+
     /// <summary>
     /// A Term is simple, if there is no sub expression
     /// </summary>
     /// <returns>
     ///   <c>true</c> if this instance is simple; otherwise, <c>false</c>.
     /// </returns>
+
     bool isSimple() const
     {
       for (auto&it : terms_)
@@ -199,15 +205,16 @@ namespace plc
 
       return true;
     }
-    
+
     /// <summary>
     /// Counts the number Expression levels.
     /// </summary>
     /// <returns>The enumber of levels</returns>
+
     unsigned countLevels() const
     {
       unsigned level = 0;
-      for(const Term& term : terms_)
+      for (const Term& term : terms_)
         if (term.type() == Term::Type::Expression)
         {
           unsigned termLevel = term.expression()->countLevels();
@@ -217,11 +224,12 @@ namespace plc
 
       return 1 + level;
     }
-    
+
     /// <summary>
     /// Counts the inputs, the map keys the input name to the number of occurence.
     /// </summary>
     /// <param name="inputs">The input count.</param>
+
     void countInputs(std::unordered_map<std::string, unsigned>& inputs) const
     {
       for (const Term& term : terms_)
@@ -251,8 +259,8 @@ namespace plc
 
   private:
 
-    Operator operator_= Operator::None;
-    std::vector<Term> terms_;    
+    Operator operator_ = Operator::None;
+    std::vector<Term> terms_;
     /// <summary>
     /// The unique identifier
     /// </summary>
@@ -261,8 +269,8 @@ namespace plc
   };
 }
 
-std::ostream& operator << (std::ostream& out, const plc::Expression& expression);
-std::ostream& operator << (std::ostream& out, const plc::Term& term);
+std::ostream& operator<<(std::ostream& out, const plc::Expression& expression);
+std::ostream& operator<<(std::ostream& out, const plc::Term& term);
 
 #endif // !_INCLUDE_PLC_EXPRESSION_H_
 
