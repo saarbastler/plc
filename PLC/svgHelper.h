@@ -212,6 +212,22 @@ namespace svg
     const char *text;
   };
 
+  struct repeat
+  {
+    repeat(size_t count, const char *text) : count(count), text(text) {}
+
+    friend std::ostream& operator<<(std::ostream& out, const repeat& r)
+    {
+      for (unsigned i = 0; i < r.count; i++)
+        out << r.text;
+
+      return out;
+    }
+
+    size_t count;
+    const char *text;
+  };
+
 }
 
 std::ostream& operator << (std::ostream& out, const svg::Rect& elem);

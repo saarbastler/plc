@@ -37,64 +37,12 @@ public:
 
     convert(1, 1, expression);
 
-    out << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << std::endl
-      //<< "<?xml-stylesheet type=\"text/css\" href=\"plc.css\"?>" << std::endl
-      << "<svg xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns=\"http://www.w3.org/2000/svg\" " //xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
-      "width=\"800\" height=\"800\">" << std::endl
-      << "<defs>" << std::endl;
-
-    out << "<style type=\"text/css\">" << std::endl
-      << "<![CDATA[" << std::endl
-      << "rect.box { stroke:#000; fill:none; }" << std::endl
-      << "circle.invert { stroke:#000; fill:none; }" << std::endl
-      << "circle.join { stroke:#000; fill:#000; }" << std::endl
-      << "line.link { stroke:#000; stroke-width:1px; }" << std::endl
-      << "line.on { stroke:#0f0; }" << std::endl
-
-      << "line.test { stroke:#f00; }" << std::endl
-
-      << "]]>" << std::endl
-      << "</style>" << std::endl;
-
-    out << "<script type=\"text/javascript\"><![CDATA[" << std::endl
-      << "document.addEventListener(\"DOMContentLoaded\", function ()" << std::endl
-      << "{" << std::endl
-      << "var i=new Array(";
-
-    for (auto it = inputs.begin(); it != inputs.end(); it++)
-      out << "false,";
-    out << ");" << std::endl
-      << "var g=new Array(";
-    for (unsigned i = 0; i <= plc::Expression::lastId(); i++)
-      out << "false,";
-    out << ");" << std::endl;
-
-    out << "function updateElement(name,value)" << std::endl
-      << "{" << std::endl
-      << "  document.querySelectorAll('.' + name).forEach( function(obj)" << std::endl
-      << "  {" << std::endl
-      << "    if(value)" << std::endl
-      << "      obj.classList.add('on');" << std::endl
-      << "    else" << std::endl
-      << "      obj.classList.remove('on');" << std::endl
-      << "  });" << std::endl
-      << "}" << std::endl;
-
-    out << "function logic()" << std::endl
-      << "{" << std::endl
-      << jsOut.str()
-      << "i.forEach(function(v,i) { updateElement('i' + i, v);} );" << std::endl
-      << "g.forEach(function(v,i) { updateElement('g' + i, v);} );" << std::endl
-      << "}" << std::endl;
-
-
-    out << "function toggleInput(event)" << std::endl
-      << "{" << std::endl
-      << "  let index = event.target.id;" << std::endl
-      << "  i[index] = !i[index];" << std::endl
-      << "  logic();" << std::endl
-      << "  console.log('i[' + index + ']=' + i[index]);" << std::endl
-      << "}" << std::endl;
+    out << SVG_HEADER << svg::repeat(inputs.size(), "false,")
+      << ");" << std::endl
+      << "var g=new Array("
+      << svg::repeat(plc::Expression::lastId(), "false,")
+      << ");" << std::endl
+      << SVG_FUNCTIONS;
 
     for (auto it = inputs.begin(); it != inputs.end(); it++)
     {
@@ -103,11 +51,10 @@ public:
       out << "document.getElementById('" << index << "').addEventListener('click',toggleInput);" << std::endl;
     }
 
-    out << "});" << std::endl
-      << "]]></script>" << std::endl
-      << "</defs>" << std::endl
+    out << SVG_FOOTER
       << svgOut.str()
-      << "</svg>" << std::endl;
+      << "</svg>" 
+      << std::endl;
   }
 
 
@@ -127,6 +74,10 @@ private:
   static constexpr const unsigned INVERT_RADIUS = 4;
   static constexpr const unsigned CROSSING_WIDTH = 10;
   static constexpr const unsigned JOIN_RADIUS = 2;
+
+  static const char *SVG_HEADER;
+  static const char *SVG_FUNCTIONS;
+  static const char *SVG_FOOTER;
 
   unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression)
   {

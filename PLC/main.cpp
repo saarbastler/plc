@@ -32,26 +32,16 @@ std::ostream& operator<<(std::ostream& out, ParserResult& parserResult)
   return out;
 }
 
-int mainX()
+int main()
 {
-  //std::ifstream in("C:\\HardwareProjekte\\Haus\\AussenBeleuchtung\\plc.txt");
+  std::ifstream in("C:\\HardwareProjekte\\Haus\\plcProgram\\plc.txt");
 
   PlcAst plcAst;
-
-  plcAst.addVariable(Variable("out", Variable::Type::Output, 0));
-
-  plcAst.addVariable(Variable("a", Variable::Type::Input, 0));
-  plcAst.addVariable(Variable("b", Variable::Type::Input, 1));
-  plcAst.addVariable(Variable("c", Variable::Type::Input, 2));
-  plcAst.addVariable(Variable("d", Variable::Type::Input, 3));
-  plcAst.addVariable(Variable("input", Variable::Type::Input, 4));
-  plcAst.addVariable(Variable("output", Variable::Type::Output, 5));
-
   try
   {
-    plcParse("output = (a & !b | c & d) & input & (!a & b | c & !d);", plcAst);
+    plcParse(in, plcAst);
 
-    const plc::Expression& equation = plcAst.equations().at("out");
+    const plc::Expression& equation = plcAst.equations().begin()->second;
 
     std::ofstream out("C:\\HardwareProjekte\\Haus\\out.svg");
 
@@ -93,7 +83,7 @@ int mainX()
   return 0;
 }
 
-int main()
+int mainY()
 {
   std::ifstream in("C:\\HardwareProjekte\\Haus\\AussenBeleuchtung\\plc.txt");
 
