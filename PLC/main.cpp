@@ -41,14 +41,14 @@ int main()
   {
     plcParse(in, plcAst);
 
-    const plc::Expression& equation = plcAst.equations().begin()->second;
+    const plc::Expression& equation = plcAst.equations().at("test"); // .begin()->second;
 
     std::ofstream out("C:\\HardwareProjekte\\Haus\\out.svg");
 
     Plc2svg plc2svg(plcAst, out);
     plc2svg.convert(equation);
 
-    std::vector<plc::Operation> instructions;
+    /*std::vector<plc::Operation> instructions;
     plc::compile(plcAst, equation, "output", instructions);
 
     PlcSimulator plcSimulator(5, 0, 0, 0);
@@ -73,7 +73,7 @@ int main()
     for (uint8_t op : avrplc)
       std::cout << std::hex << unsigned(op) << ' ';
 
-    std::cout << std::endl;
+    std::cout << std::endl;*/
   }
   catch (std::exception& ex)
   {

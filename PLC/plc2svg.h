@@ -16,12 +16,11 @@ public:
 
   void convert(const plc::Expression& expression)
   {
-    std::unordered_map<std::string, unsigned> inputs;
-    expression.countInputs(inputs);
+    expression.countInputs(inputIdMap);
 
     unsigned crossings = 0;
     unsigned chars = 0;
-    for (auto it = inputs.begin(); it != inputs.end(); it++)
+    for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
     {
       unsigned width = unsigned(it->first.length());
       if (width > chars)
@@ -37,14 +36,14 @@ public:
 
     convert(1, 1, expression);
 
-    out << SVG_HEADER << svg::repeat(inputs.size(), "false,")
-      << ");" << std::endl
-      << "var g=new Array("
-      << svg::repeat(plc::Expression::lastId(), "false,")
-      << ");" << std::endl
-      << SVG_FUNCTIONS;
+    out << SVG_HEADER 
+      << svg::array("i", inputIdMap.size()) << std::endl
+      << svg::array("g", plc::Expression::lastId()) << std::endl
+      << SVG_FUNCTIONS_A
+      << jsOut.str()
+      << SVG_FUNCTIONS_B;
 
-    for (auto it = inputs.begin(); it != inputs.end(); it++)
+    for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
     {
       unsigned index = plcAst.getVariable(it->first).index();
 
@@ -76,10 +75,11 @@ private:
   static constexpr const unsigned JOIN_RADIUS = 2;
 
   static const char *SVG_HEADER;
-  static const char *SVG_FUNCTIONS;
+  static const char *SVG_FUNCTIONS_A;
+  static const char *SVG_FUNCTIONS_B;
   static const char *SVG_FOOTER;
 
-  unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression)
+  unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary= plc::Term::Unary::None)
   {
     unsigned size = 0;
     unsigned index = 1;
@@ -101,7 +101,7 @@ private:
 
       case plc::Term::Type::Expression:
       {
-        unsigned subSize = 2 + convert(index + ypos, level + 1, *term.expression());
+        unsigned subSize = 2 + convert(index + ypos, level + 1, *term.expression(), term.unary());
 
         index += subSize;
         size += subSize;
@@ -113,9 +113,15 @@ private:
     }
 
     svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
-      << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, expression.op() == plc::Expression::Operator::And ? "&" : ">=1", {})
+      << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, expression.op() == plc::Expression::Operator::And ? "&" : ">=1", {});
 
-      << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH, outy, { LINK, gateCssClass(expression) });
+    if (unary == plc::Term::Unary::None)
+      svgOut << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH, outy, { LINK, gateCssClass(expression) });
+    else
+      svgOut << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH - 2 * INVERT_RADIUS, outy, { LINK, gateCssClass(expression) })
+      << svg::Circle(crossingWidth + width + GATE_WIDTH + LINE_LENGTH - INVERT_RADIUS, outy, INVERT_RADIUS, { INVERT, gateCssClass(expression) });
+
+
 
     expressionJsEquation(expression);
 
@@ -146,6 +152,7 @@ private:
       input->second.y = y;
     }
 
+    
     if (term.unary() == plc::Term::Unary::None)
       svgOut << svg::Line(x, y, crossingWidth + width, y, { LINK, variableCssClass(variable) });
     else
@@ -237,6 +244,7 @@ private:
     unsigned y;
   };
 
+  std::unordered_map<std::string, unsigned> inputIdMap;
   std::unordered_map<std::string, COORD> inputPosition;
 };
 

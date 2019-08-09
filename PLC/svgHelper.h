@@ -25,6 +25,9 @@ namespace svg
   extern const char LINE[];
   extern const char CIRCLE[];
 
+  constexpr const char *FALSE = "false";
+  constexpr const char *TRUE = "true";
+
   template<const char *NAME, typename T>
   class Attribute
   {
@@ -228,6 +231,21 @@ namespace svg
     const char *text;
   };
 
+  struct array
+  {
+    array(const char *name, size_t size, const char *defaultValue = FALSE) : name(name), size(size), defaultValue(defaultValue) {}
+
+    friend std::ostream& operator<<(std::ostream& out, const array& a)
+    {
+      out << "var " << a.name << "= Array(" << a.size << ").fill(" << a.defaultValue<< ");" << std::endl;
+
+      return out;
+    }
+
+    const char *name;
+    size_t size;
+    const char *defaultValue;
+  };
 }
 
 std::ostream& operator << (std::ostream& out, const svg::Rect& elem);

@@ -16,10 +16,9 @@ line.test { stroke:#f00; }
 <script type="text/javascript"><![CDATA[
 document.addEventListener("DOMContentLoaded", function ()
 {
-var i=new Array()~~~";
+)~~~";
 
-
-const char *Plc2svg::SVG_FUNCTIONS = R"~~~(function updateElement(name, value)
+const char *Plc2svg::SVG_FUNCTIONS_A = R"~~~(function updateElement(name, value)
 {
   document.querySelectorAll('.' + name).forEach(function(obj)
   {
@@ -31,8 +30,9 @@ const char *Plc2svg::SVG_FUNCTIONS = R"~~~(function updateElement(name, value)
 }
 function logic()
 {
-  g[0] = !i[0] | !i[1];
-  i.forEach(function(v, i) { updateElement('i' + i, v); });
+)~~~";
+
+const char *Plc2svg::SVG_FUNCTIONS_B = R"~~~(i.forEach(function(v, i) { updateElement('i' + i, v); });
   g.forEach(function(v, i) { updateElement('g' + i, v); });
 }
 function toggleInput(event)
