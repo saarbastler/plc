@@ -12,7 +12,22 @@ class Plc2svg
 {
 public:
 
-  Plc2svg(const PlcAst& plcAst, std::ostream& out) : plcAst(plcAst), out(out) {}
+  /// <summary>
+  /// SVG Options
+  /// </summary>
+  enum struct Option
+  {
+    // Non Interactive, means no Clickable Inputs
+    NotInteractive,
+
+    // No Javascript at all, includes NonInteractive
+    NoJavascript
+  };
+
+  Plc2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<Option> options) : plcAst(plcAst), out(out) 
+  {
+    setupOptions(options);
+  }
 
   void convert(const plc::Expression& expression)
   {
@@ -36,18 +51,29 @@ public:
 
     convert(1, 1, expression);
 
-    out << SVG_HEADER 
-      << svg::array("i", inputIdMap.size()) << std::endl
-      << svg::array("g", plc::Expression::lastId()) << std::endl
-      << SVG_FUNCTIONS_A
-      << jsOut.str()
-      << SVG_FUNCTIONS_B;
+    out << SVG_HEADER;
 
-    for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
+    if (!hasOption(Option::NoJavascript))
     {
-      unsigned index = plcAst.getVariable(it->first).index();
+      out << SVG_FUNCTIONS_JS_START
+        << svg::array("i", inputIdMap.size())
+        << svg::array("g", plc::Expression::lastId())
+        << SVG_FUNCTIONS_A
+        << jsOut.str()
+        << SVG_FUNCTIONS_B;
 
-      out << "document.getElementById('" << index << "').addEventListener('click',toggleInput);" << std::endl;
+      if (!hasOption(Option::NotInteractive))
+      {
+        out << SVG_FUNCTIONS_TOGGLE_INPUT;
+        for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
+        {
+          unsigned index = plcAst.getVariable(it->first).index();
+
+          out << "document.getElementById('" << index << "').addEventListener('click',toggleInput);" << std::endl;
+        }
+      }
+
+      out << SVG_FUNCTIONS_JS_END;
     }
 
     out << SVG_FOOTER
@@ -58,6 +84,20 @@ public:
 
 
 private:
+
+  bool hasOption(Option option)
+  {
+    return optionBitvector & (1 << static_cast<unsigned>(option));
+  }
+
+  void setupOptions(const std::initializer_list<Option> options)
+  {
+    unsigned tmp = 0;
+    for (auto it = options.begin(); it != options.end(); it++)
+      tmp |= 1 << static_cast<unsigned>(*it);
+
+    optionBitvector = tmp;
+  }
 
   static constexpr const char *BOX = "box";
   static constexpr const char *VARIABLE = "variable";
@@ -75,8 +115,11 @@ private:
   static constexpr const unsigned JOIN_RADIUS = 2;
 
   static const char *SVG_HEADER;
+  static const char *SVG_FUNCTIONS_JS_START;
+  static const char *SVG_FUNCTIONS_JS_END;
   static const char *SVG_FUNCTIONS_A;
   static const char *SVG_FUNCTIONS_B;
+  static const char *SVG_FUNCTIONS_TOGGLE_INPUT;
   static const char *SVG_FOOTER;
 
   unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary= plc::Term::Unary::None)
@@ -246,6 +289,8 @@ private:
 
   std::unordered_map<std::string, unsigned> inputIdMap;
   std::unordered_map<std::string, COORD> inputPosition;
+
+  unsigned optionBitvector;
 };
 
 #endif // !_INCLUDE_PLC_2_SVG_H_

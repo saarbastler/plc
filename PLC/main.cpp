@@ -45,7 +45,7 @@ int main()
 
     std::ofstream out("C:\\HardwareProjekte\\Haus\\out.svg");
 
-    Plc2svg plc2svg(plcAst, out);
+    Plc2svg plc2svg(plcAst, out, { });
     plc2svg.convert(equation);
 
     /*std::vector<plc::Operation> instructions;

@@ -21,7 +21,7 @@ void plcParse(const char *text, PlcAst& plcAst)
 
 void convert2svg(const PlcAst& plcAst, const plc::Expression& expression, std::ostream& out)
 {
-  Plc2svg plc2svg(plcAst, out);
+  Plc2svg plc2svg(plcAst, out, {});
 
   plc2svg.convert(expression);
 }

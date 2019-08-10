@@ -12,7 +12,9 @@ line.link { stroke:#000; stroke-width:1px; }
 line.on { stroke:#0f0; }
 line.test { stroke:#f00; }
 ]]>
-</style>
+</style>)~~~";
+
+const char *Plc2svg::SVG_FUNCTIONS_JS_START = R"~~~(
 <script type="text/javascript"><![CDATA[
 document.addEventListener("DOMContentLoaded", function ()
 {
@@ -35,7 +37,9 @@ function logic()
 const char *Plc2svg::SVG_FUNCTIONS_B = R"~~~(i.forEach(function(v, i) { updateElement('i' + i, v); });
   g.forEach(function(v, i) { updateElement('g' + i, v); });
 }
-function toggleInput(event)
+)~~~";
+
+const char *Plc2svg::SVG_FUNCTIONS_TOGGLE_INPUT = R"~~~(function toggleInput(event)
 {
   let index = event.target.id;
   i[index] = !i[index];
@@ -44,7 +48,9 @@ function toggleInput(event)
 }
 )~~~";
 
-const char *Plc2svg::SVG_FOOTER = R"~~~(});
-]]></script>
+const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(});
+]]></script>)~~~";
+
+const char *Plc2svg::SVG_FOOTER = R"~~~(
 </defs>
 )~~~";
