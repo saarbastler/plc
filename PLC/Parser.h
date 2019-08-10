@@ -50,7 +50,7 @@ public:
     }
 
     char c = parserInput.nextIgnoreBlank();
-    if (c == '/')
+    while (c == '/')
       c = parseComment();
 
     if (c)

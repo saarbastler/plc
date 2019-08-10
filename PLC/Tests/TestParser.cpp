@@ -93,6 +93,53 @@ BOOST_AUTO_TEST_CASE(Parser_Comments3)
   BOOST_CHECK(!parser.next(parserResult).operator bool());
 }
 
+BOOST_AUTO_TEST_CASE(Parser_Comments4)
+{
+  std::istringstream in(
+    "nocomment;\n"
+    "// single line\r\n"
+    "// single line\r\n"
+    "2\n"
+  );
+
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+
+  ParserResult parserResult;
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "nocomment"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 2ull));
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+}
+
+BOOST_AUTO_TEST_CASE(Parser_Comments5)
+{
+  std::istringstream in(
+    "nocomment;\n"
+    "/* multi\n"
+    "line */\n"
+    "// single line\r\n"
+    "// single line\r\n"
+    "/* multi\n"
+    "line */\n"
+    "2\n"
+  );
+
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+
+  ParserResult parserResult;
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "nocomment"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 2ull));
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+  BOOST_CHECK(!parser.next(parserResult).operator bool());
+}
+
+
 BOOST_AUTO_TEST_CASE(Parser_Integers)
 {
   std::istringstream in(
