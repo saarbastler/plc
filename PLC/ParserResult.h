@@ -71,6 +71,30 @@ public:
     return *this;
   }
 
+  friend std::ostream& operator<<(std::ostream& out, const ParserResult& parserResult)
+  {
+    out << "ParserResult: ";
+    switch (parserResult.type())
+    {
+    case ParserResult::Type::Empty:
+      out << "Empty";
+      break;
+    case ParserResult::Type::Char:
+      out << "Char: " << parserResult.text();
+      break;
+    case ParserResult::Type::Identifier:
+      out << "Identifier: " << parserResult.text();
+      break;
+    case ParserResult::Type::Integer:
+      out << "Int: " << parserResult.intValue();
+      break;
+    default:
+      out << "Unknown Type" << static_cast<int>(parserResult.type());
+    }
+
+    return out;
+  }
+
   void swap(ParserResult& other)
   {
     if (this != &other)
