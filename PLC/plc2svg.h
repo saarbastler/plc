@@ -58,6 +58,7 @@ public:
       out << SVG_FUNCTIONS_JS_START
         << svg::array("i", inputIdMap.size())
         << svg::array("g", plc::Expression::lastId())
+        << svg::array("m", plcAst.countVariableOfType(Variable::Type::Monoflop))
         << SVG_FUNCTIONS_A
         << jsOut.str()
         << SVG_FUNCTIONS_B;
@@ -67,9 +68,10 @@ public:
         out << SVG_FUNCTIONS_TOGGLE_INPUT;
         for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
         {
-          unsigned index = plcAst.getVariable(it->first).index();
+          const Variable& variable = plcAst.getVariable(it->first);
+          unsigned index = variable.index();
 
-          out << "document.getElementById('" << index << "').addEventListener('click',toggleInput);" << std::endl;
+          out << "document.getElementById('" << variableTypeIdentifier(variable.type()) << index << "').addEventListener('click',toggleInput);" << std::endl;
         }
       }
 
@@ -183,7 +185,7 @@ private:
       inputPosition.emplace(term.identifier(), COORD{ XSTART + textWidth + crossingCount * CROSSING_WIDTH, y });
 
       std::ostringstream id;
-      id << variable.index();
+      id << variableTypeIdentifier(variable.type()) << variable.index();
       svgOut << svg::Text(x, y, term.identifier(), { VARIABLE, variableCssClass(variable) }, id.str().c_str());
     }
     else

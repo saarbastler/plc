@@ -35,16 +35,26 @@ function logic()
 )~~~";
 
 const char *Plc2svg::SVG_FUNCTIONS_B = R"~~~(i.forEach(function(v, i) { updateElement('i' + i, v); });
-  g.forEach(function(v, i) { updateElement('g' + i, v); });
+m.forEach(function(v, i) { updateElement('m' + i, v); });
+g.forEach(function(v, i) { updateElement('g' + i, v); });
 }
 )~~~";
 
 const char *Plc2svg::SVG_FUNCTIONS_TOGGLE_INPUT = R"~~~(function toggleInput(event)
 {
-  let index = event.target.id;
-  i[index] = !i[index];
+  let index = Number.parseInt(event.target.id.substring(1));
+  switch(event.target.id.charAt(0))
+  {
+    case 'i':
+      i[index] = !i[index];
+      console.log('i[' + index + ']=' + i[index]);
+      break;
+    case 'm':
+      m[index] = !m[index];
+      console.log('m[' + index + ']=' + m[index]);
+      break;
+  }
   logic();
-  console.log('i[' + index + ']=' + i[index]);
 }
 )~~~";
 

@@ -75,6 +75,16 @@ public:
     return variableDescription_;
   }
 
+  unsigned countVariableOfType(Variable::Type t) const
+  {
+    unsigned count = 0;
+    for (auto it = variableDescription_.begin(); it != variableDescription_.end(); it++)
+      if (it->second.type() == t)
+        ++count;
+
+    return count;
+  }
+
   bool equationExists(const std::string& name) const
   {
     return equations_.find(name) != equations_.end();
