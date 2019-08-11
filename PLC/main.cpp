@@ -21,6 +21,9 @@ namespace po = boost::program_options;
 #define LIST_NAME         "list"
 #define LIST              LIST_NAME ",L"
 
+#define OUTPUTS_NAME      "outputs"
+#define OUTPUTS           OUTPUTS_NAME ",o"
+
 #define EQUATION_NAME     "equation"
 #define EQUATION          EQUATION_NAME ",E"
 
@@ -50,7 +53,7 @@ private:
   const char *msg;
 };
 
-int list(const std::string& inputfile)
+int list(const std::string& inputfile, bool onlyOutputs)
 {
   std::ifstream in(inputfile);
 
@@ -60,7 +63,11 @@ int list(const std::string& inputfile)
     plcParse(in, plcAst);
 
     for (auto it = plcAst.equations().begin(); it != plcAst.equations().end(); it++)
-      std::cout << it->first << std::endl;
+      if (!onlyOutputs ||
+        (onlyOutputs && plcAst.variableExists(it->first) && plcAst.getVariable(it->first).type() == Variable::Type::Output))
+      {
+        std::cout << it->first << std::endl;
+      }
   }
   catch (std::exception& ex)
   {
@@ -102,11 +109,11 @@ int equation(const po::variables_map& vm)
 
   std::ofstream out(vm[OUTPUT_FILE_NAME].as<std::string>());
 
-  std::initializer_list<Plc2svg::Option> opt;
+  std::initializer_list<SVGOption> opt;
   if (vm.count(NO_JS_NAME))
-    opt = { Plc2svg::Option::NoJavascript };
+    opt = { SVGOption::NoJavascript };
   else if(!vm.count(INTERACTIVE_NAME))
-    opt = { Plc2svg::Option::NotInteractive };
+    opt = { SVGOption::NotInteractive };
 
   Plc2svg plc2svg(plcAst, out, opt);
 
@@ -127,9 +134,10 @@ int main(int argc, char *argv[])
     ( OUTPUT_FILE, po::value<std::string>(), "output file")
     ( EQUATION, po::value<std::string>(), "use Equation arg")
     ( LIST, "list Equations")
-    ( INTERACTIVE, "Interactive SVG")
+    ( OUTPUTS, "list only Outputs")
+    ( INTERACTIVE, "Interactive SVG generation")
     ( NO_JS, "no Javascript at all")
-    ( RESOLVE_DEP, "resolve Dependencies")
+    ( RESOLVE_DEP, "resolve Dependencies in SVG generation")
     ;
 
   po::variables_map vm;
@@ -148,7 +156,7 @@ int main(int argc, char *argv[])
     }
 
     if (vm.count(LIST_NAME))
-      return list(vm[INPUT_FILE_NAME].as<std::string>());
+      return list(vm[INPUT_FILE_NAME].as<std::string>(), vm.count(OUTPUTS_NAME) > 0);
     else if (vm.count(EQUATION_NAME))
       return equation(vm);
     else

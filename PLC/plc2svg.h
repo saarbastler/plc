@@ -7,24 +7,13 @@
 
 #include "PlcAst.h"
 #include "svgHelper.h"
+#include "SvgOption.h"
 
 class Plc2svg
 {
 public:
 
-  /// <summary>
-  /// SVG Options
-  /// </summary>
-  enum struct Option
-  {
-    // Non Interactive, means no Clickable Inputs
-    NotInteractive,
-
-    // No Javascript at all, includes NonInteractive
-    NoJavascript
-  };
-
-  Plc2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<Option> options) : plcAst(plcAst), out(out) 
+  Plc2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<SVGOption> options) : plcAst(plcAst), out(out) 
   {
     setupOptions(options);
   }
@@ -53,7 +42,7 @@ public:
 
     out << SVG_HEADER;
 
-    if (!hasOption(Option::NoJavascript))
+    if (!hasOption(SVGOption::NoJavascript))
     {
       out << SVG_FUNCTIONS_JS_START
         << svg::array("i", inputCountMap.size())
@@ -63,7 +52,7 @@ public:
         << jsOut.str()
         << SVG_FUNCTIONS_B;
 
-      if (!hasOption(Option::NotInteractive))
+      if (!hasOption(SVGOption::NotInteractive))
       {
         out << SVG_FUNCTIONS_TOGGLE_INPUT;
         for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
@@ -87,12 +76,12 @@ public:
 
 private:
 
-  bool hasOption(Option option)
+  bool hasOption(SVGOption option)
   {
     return optionBitvector & (1 << static_cast<unsigned>(option));
   }
 
-  void setupOptions(const std::initializer_list<Option> options)
+  void setupOptions(const std::initializer_list<SVGOption> options)
   {
     unsigned tmp = 0;
     for (auto it = options.begin(); it != options.end(); it++)
@@ -110,6 +99,7 @@ private:
   static constexpr const unsigned XSTART = 10;
   static constexpr const unsigned CHAR_HEIGHT = 20;
   static constexpr const unsigned CHAR_WIDTH = 10;
+  static constexpr const unsigned CHAR_OFFSET = 5;
   static constexpr const unsigned LINE_LENGTH = 50;
   static constexpr const unsigned GATE_WIDTH = 75;
   static constexpr const unsigned INVERT_RADIUS = 4;
@@ -167,7 +157,7 @@ private:
     {
       lineX1 += GATE_WIDTH;
       svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
-        << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, operatorSymbol(expression.op()), {});
+        << svg::Text(crossingWidth + width + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT, operatorSymbol(expression.op()), {});
     }
 
     svgOut << svg::Line(lineX1, outy, lineX2, outy, { LINK, gateCssClass(expression) });

@@ -58,8 +58,8 @@ const char *Plc2svg::SVG_FUNCTIONS_TOGGLE_INPUT = R"~~~(function toggleInput(eve
 }
 )~~~";
 
-const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(});
-]]></script>)~~~";
+const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(logic();
+});]]></script>)~~~";
 
 const char *Plc2svg::SVG_FOOTER = R"~~~(
 </defs>
