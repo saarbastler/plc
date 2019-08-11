@@ -6,7 +6,9 @@
 #include <sstream>
 #include <vector>
 #include <unordered_map>
+#include <algorithm>
 
+class PlcAst;
 namespace plc
 {
   class Expression;
@@ -32,6 +34,7 @@ namespace plc
     Term()
     {
     }
+
     Term(const Term& other);
 
     Term(std::unique_ptr<Expression>& expression)
@@ -107,6 +110,13 @@ namespace plc
       return identifier_;
     }
 
+    void setExpression(Expression *expression)
+    {
+      expression_.reset(expression);
+      type_ = Type::Expression;
+      identifier_.clear();
+    }
+
   private:
 
     Unary unary_ = Unary::None;
@@ -126,17 +136,25 @@ namespace plc
 
     enum class Operator
     {
-      None, Or, And
+      None, Or, And, Timer
     };
 
     Expression() : id_(idCounter++)
     {
     }
 
-    /*Expression(Expression& other)
+    Expression(const Expression& other)
     {
-      swap(other);
-    }*/
+      operator_ = other.operator_;
+
+      terms_.reserve(other.terms_.size());
+      std::for_each(other.terms_.begin(), other.terms_.end(), [this](const Term& otherTerm)
+      {
+        terms_.emplace_back(Term(otherTerm));
+      });
+
+      id_= other.id_;
+    }
 
     Expression(Term& term) : Expression()
     {
@@ -258,6 +276,8 @@ namespace plc
     }
 
   private:
+
+    friend class ::PlcAst;
 
     Operator operator_ = Operator::None;
     std::vector<Term> terms_;

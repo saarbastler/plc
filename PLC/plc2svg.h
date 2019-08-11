@@ -31,11 +31,11 @@ public:
 
   void convert(const plc::Expression& expression)
   {
-    expression.countInputs(inputIdMap);
+    expression.countInputs(inputCountMap);
 
     unsigned crossings = 0;
     unsigned chars = 0;
-    for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
+    for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
     {
       unsigned width = unsigned(it->first.length());
       if (width > chars)
@@ -56,7 +56,7 @@ public:
     if (!hasOption(Option::NoJavascript))
     {
       out << SVG_FUNCTIONS_JS_START
-        << svg::array("i", inputIdMap.size())
+        << svg::array("i", inputCountMap.size())
         << svg::array("g", plc::Expression::lastId())
         << svg::array("m", plcAst.countVariableOfType(Variable::Type::Monoflop))
         << SVG_FUNCTIONS_A
@@ -66,7 +66,7 @@ public:
       if (!hasOption(Option::NotInteractive))
       {
         out << SVG_FUNCTIONS_TOGGLE_INPUT;
-        for (auto it = inputIdMap.begin(); it != inputIdMap.end(); it++)
+        for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
         {
           const Variable& variable = plcAst.getVariable(it->first);
           unsigned index = variable.index();
@@ -157,16 +157,22 @@ private:
       }
     }
 
-    svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
-      << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, expression.op() == plc::Expression::Operator::And ? "&" : ">=1", {});
+    int lineX1 = crossingWidth + width;
+    int lineX2 = crossingWidth + width + GATE_WIDTH + LINE_LENGTH;
 
-    if (unary == plc::Term::Unary::None)
-      svgOut << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH, outy, { LINK, gateCssClass(expression) });
-    else
-      svgOut << svg::Line(crossingWidth + width + GATE_WIDTH, outy, crossingWidth + width + GATE_WIDTH + LINE_LENGTH - 2 * INVERT_RADIUS, outy, { LINK, gateCssClass(expression) })
-      << svg::Circle(crossingWidth + width + GATE_WIDTH + LINE_LENGTH - INVERT_RADIUS, outy, INVERT_RADIUS, { INVERT, gateCssClass(expression) });
+    if (unary != plc::Term::Unary::None)
+      lineX2 -= 2 * INVERT_RADIUS;
 
+    if (expression.op() != plc::Expression::Operator::None || expression.terms().size() > 1)
+    {
+      lineX1 += GATE_WIDTH;
+      svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
+        << svg::Text(crossingWidth + width, (1 + ypos) * CHAR_HEIGHT, operatorSymbol(expression.op()), {});
+    }
 
+    svgOut << svg::Line(lineX1, outy, lineX2, outy, { LINK, gateCssClass(expression) });
+    if (unary != plc::Term::Unary::None)
+      svgOut << svg::Circle(lineX2 + INVERT_RADIUS, outy, INVERT_RADIUS, { INVERT, gateCssClass(expression) });
 
     expressionJsEquation(expression);
 
@@ -236,6 +242,20 @@ private:
     return tmpCssClass.c_str();
   }
 
+  const char *operatorSymbol(plc::Expression::Operator op)
+  {
+    switch (op)
+    {
+    case plc::Expression::Operator::And:
+      return "&";
+    case plc::Expression::Operator::Or:
+      return "\xE2\x89\xA5 1";
+    case plc::Expression::Operator::Timer:
+      return "\xE2\xAD\xB2 t";
+    default:
+      return "?";
+    }
+  }
   std::string tmpCssClass;
 
   void expressionJsEquation(const plc::Expression& expression)
@@ -289,7 +309,7 @@ private:
     unsigned y;
   };
 
-  std::unordered_map<std::string, unsigned> inputIdMap;
+  std::unordered_map<std::string, unsigned> inputCountMap;
   std::unordered_map<std::string, COORD> inputPosition;
 
   unsigned optionBitvector;

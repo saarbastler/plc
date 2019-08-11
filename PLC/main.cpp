@@ -30,6 +30,9 @@ namespace po = boost::program_options;
 #define NO_JS_NAME        "nojs"
 #define NO_JS             NO_JS_NAME ",J"
 
+#define RESOLVE_DEP_NAME  "resolve"
+#define RESOLVE_DEP       RESOLVE_DEP_NAME ",R"
+
 #define USAGE             "Usage: plc [options] plc-file\n  plc -L plcfile\n  plc -E test -O out.svg plcfile\n"
 
 class OptionsException : public std::exception
@@ -106,7 +109,11 @@ int equation(const po::variables_map& vm)
     opt = { Plc2svg::Option::NotInteractive };
 
   Plc2svg plc2svg(plcAst, out, opt);
-  plc2svg.convert(equation);
+
+  if (vm.count(RESOLVE_DEP_NAME))
+    plc2svg.convert(plcAst.resolveDependencies(equationName));
+  else
+    plc2svg.convert(equation);
 
   return  0;
 }
@@ -122,6 +129,7 @@ int main(int argc, char *argv[])
     ( LIST, "list Equations")
     ( INTERACTIVE, "Interactive SVG")
     ( NO_JS, "no Javascript at all")
+    ( RESOLVE_DEP, "resolve Dependencies")
     ;
 
   po::variables_map vm;

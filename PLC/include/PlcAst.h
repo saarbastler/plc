@@ -105,7 +105,45 @@ public:
     return equations_;
   }
 
+  const plc::Expression resolveDependencies(const std::string& name)
+  {
+    if (!equationExists(name))
+      throw PlcAstException("Equation %s does not exist.", name.c_str());
+
+    plc::Expression all(equations_[name]);
+
+    resolveDependencies(all);
+
+    return all;
+  }
+
 protected:
+
+  void resolveDependencies(plc::Expression& expression)
+  {
+    for (auto it = expression.terms_.begin(); it != expression.terms_.end(); it++)
+    {
+      switch (it->type())
+      {
+      case plc::Term::Type::Expression:
+        resolveDependencies(*it->expression().get());
+        break;
+
+      case plc::Term::Type::Identifier:
+        auto var = equations_.find(it->identifier());
+        if (var != equations_.end())
+        {
+          std::unique_ptr<plc::Expression> dep(new plc::Expression(var->second));
+          plc::Term term(dep);
+
+          it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer));
+        }
+        break;
+      }
+    }
+
+
+  }
 
   VariableDescriptionType variableDescription_;
   EquationType equations_;
