@@ -16,49 +16,58 @@ line.test { stroke:#f00; }
 
 const char *Plc2svg::SVG_FUNCTIONS_JS_START = R"~~~(
 <script type="text/javascript"><![CDATA[
+function SVGData(inputs,outputs,timer,intermediates, logicfn)
+{
+  this.data = [ Array(inputs).fill(false), Array(outputs).fill(false),
+    Array(timer).fill(false), Array(intermediates).fill(false) ];
+  this.prefix = [ 'i', 'o', 'm', 'g' ];
+  var that= this;
+  
+  function updateElement(name, value)
+  {
+    document.querySelectorAll('.' + name).forEach(function(obj)
+    {
+      if (value)
+        obj.classList.add('on');
+      else
+        obj.classList.remove('on');
+    });
+  }
+  this.update = function()
+  {
+    logicfn(that.data);
+    
+    that.prefix.forEach(function(p, i) 
+    { 
+      that.data[i].forEach(function(v, j){ updateElement(p + j, v); });
+    });
+  }
+  this.setValue = function(type, idx, value)
+  {
+    that.data[type][idx]= value;    
+    that.update();
+    
+    return that.data[type][idx];
+  }
+  this.toggleValue = function(type, idx)
+  {
+    that.data[type][idx]= !that.data[type][idx];    
+    that.update();
+    
+    return that.data[type][idx];
+  }
+  this.toggleById = function(id)
+  {
+    let type= that.prefix.indexOf( id.charAt(0) );
+    if( type >= 0 )
+      that.toggleValue(type, Number.parseInt(id.substring(1)));
+  }
+}
 document.addEventListener("DOMContentLoaded", function ()
 {
 )~~~";
 
-const char *Plc2svg::SVG_FUNCTIONS_A = R"~~~(function updateElement(name, value)
-{
-  document.querySelectorAll('.' + name).forEach(function(obj)
-  {
-    if (value)
-      obj.classList.add('on');
-    else
-      obj.classList.remove('on');
-  });
-}
-function logic()
-{
-)~~~";
-
-const char *Plc2svg::SVG_FUNCTIONS_B = R"~~~(i.forEach(function(v, i) { updateElement('i' + i, v); });
-m.forEach(function(v, i) { updateElement('m' + i, v); });
-g.forEach(function(v, i) { updateElement('g' + i, v); });
-}
-)~~~";
-
-const char *Plc2svg::SVG_FUNCTIONS_TOGGLE_INPUT = R"~~~(function toggleInput(event)
-{
-  let index = Number.parseInt(event.target.id.substring(1));
-  switch(event.target.id.charAt(0))
-  {
-    case 'i':
-      i[index] = !i[index];
-      console.log('i[' + index + ']=' + i[index]);
-      break;
-    case 'm':
-      m[index] = !m[index];
-      console.log('m[' + index + ']=' + m[index]);
-      break;
-  }
-  logic();
-}
-)~~~";
-
-const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(logic();
+const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(
 });]]></script>)~~~";
 
 const char *Plc2svg::SVG_FOOTER = R"~~~(

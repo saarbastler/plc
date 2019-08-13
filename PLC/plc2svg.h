@@ -45,22 +45,24 @@ public:
     if (!hasOption(SVGOption::NoJavascript))
     {
       out << SVG_FUNCTIONS_JS_START
-        << svg::array("i", inputCountMap.size())
-        << svg::array("g", plc::Expression::lastId())
-        << svg::array("m", plcAst.countVariableOfType(Variable::Type::Monoflop))
-        << SVG_FUNCTIONS_A
+        << "this.svg = new SVGData(" << plcAst.countVariableOfType(Variable::Type::Input) << ", "
+        << plcAst.countVariableOfType(Variable::Type::Output) << ", "
+        << plcAst.countVariableOfType(Variable::Type::Monoflop) << ", "
+        << plc::Expression::lastId() << ", function(data) {"
         << jsOut.str()
-        << SVG_FUNCTIONS_B;
+        << "});" << std::endl;
 
       if (!hasOption(SVGOption::NotInteractive))
       {
-        out << SVG_FUNCTIONS_TOGGLE_INPUT;
+        out
+          << "var that=this;" << std::endl
+        << "this.toggleInput = function(event) { that.svg.toggleById(event.target.id); } " << std::endl;
         for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
         {
           const Variable& variable = plcAst.getVariable(it->first);
           unsigned index = variable.index();
 
-          out << "document.getElementById('" << variableTypeIdentifier(variable.type()) << index << "').addEventListener('click',toggleInput);" << std::endl;
+          out << "document.getElementById('" << variableTypeIdentifier(variable.type()) << index << "').addEventListener('click',that.toggleInput);" << std::endl;
         }
       }
 
@@ -108,6 +110,7 @@ private:
 
   static const char *SVG_HEADER;
   static const char *SVG_FUNCTIONS_JS_START;
+  static const char *SVG_FUNCTIONS_DOM_CONTENT_LOADED;
   static const char *SVG_FUNCTIONS_JS_END;
   static const char *SVG_FUNCTIONS_A;
   static const char *SVG_FUNCTIONS_B;
@@ -250,7 +253,7 @@ private:
 
   void expressionJsEquation(const plc::Expression& expression)
   {
-    jsOut << "g[" << expression.id() << "]= ";
+    jsOut << "data[3][" << expression.id() << "]= ";
 
     bool first = true;
     char opChar = (expression.op() == plc::Expression::Operator::And) ? '&' : '|';
@@ -269,12 +272,12 @@ private:
       case plc::Term::Type::Identifier:
       {
         const Variable& v = plcAst.getVariable(t.identifier());
-        jsOut << variableTypeIdentifier(v.type()) << '[' << v.index() << ']';
+        jsOut << "data[" << static_cast<int>(v.type()) << "][" << v.index() << ']';
       }
       break;
 
       case plc::Term::Type::Expression:
-        jsOut << "g[" << t.expression()->id() << ']';
+        jsOut << "data[3][" << t.expression()->id() << ']';
         break;
       }
     }
