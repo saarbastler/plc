@@ -13,7 +13,10 @@ enum struct SVGOption
   NoJavascript,
 
   // The Link lines will be labled
-  LinkLabels
+  LinkLabels,
+
+  // an additional text field in boxes
+  BoxText
 };
 
 #endif // !_INCLUDE_SVG_OPTION_H_

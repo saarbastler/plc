@@ -39,6 +39,9 @@ namespace po = boost::program_options;
 #define LINK_LABELS_NAME  "labels"
 #define LINK_LABELS       LINK_LABELS_NAME
 
+#define BOX_TEXT_NAME     "box-text"
+#define BOX_TEXT          BOX_TEXT_NAME ",T"
+
 #define USAGE             "Usage: plc [options] plc-file\n  plc -L plcfile\n  plc -E test -O out.svg plcfile\n"
 
 class OptionsException : public std::exception
@@ -117,9 +120,10 @@ int equation(const po::variables_map& vm)
     options.emplace_back(SVGOption::NoJavascript);
   else if (!vm.count(INTERACTIVE_NAME))
     options.emplace_back(SVGOption::NotInteractive);
-
   if (vm.count(LINK_LABELS_NAME))
     options.emplace_back(SVGOption::LinkLabels);
+  if (vm.count(BOX_TEXT_NAME))
+    options.emplace_back(SVGOption::BoxText);
 
   Plc2svg plc2svg(plcAst, out, options);
 
@@ -143,6 +147,7 @@ int main(int argc, char *argv[])
     ( OUTPUTS, "list only Outputs")
     ( INTERACTIVE, "Interactive SVG generation")
     ( NO_JS, "no Javascript at all")
+    ( BOX_TEXT, "addition text field in each box")
     ( LINK_LABELS, "Label link wires")
     ( RESOLVE_DEP, "resolve Dependencies in SVG generation")
     ;

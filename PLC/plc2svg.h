@@ -170,6 +170,14 @@ private:
       lineX1 += GATE_WIDTH;
       svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
         << svg::Text(crossingWidth + width + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
+
+      if ( hasOption(SVGOption::BoxText))
+      {
+        std::ostringstream tid;
+        tid << 't' << gateCssClass(expression);
+
+        svgOut << svg::Text(crossingWidth + width + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
+      }
     }
     
     if (variable)
@@ -184,7 +192,6 @@ private:
         svgOut << svg::Line(lineX1, outy, lineX1 + len, outy, { LINK, gateCssClass(expression) });
 
       svgOut << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, variable->name().c_str(), {});
-
     }
     else
     {

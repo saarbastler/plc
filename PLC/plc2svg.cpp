@@ -62,6 +62,12 @@ function SVGData(inputs,outputs,timer,intermediates, logicfn)
     if( type >= 0 )
       that.toggleValue(type, Number.parseInt(id.substring(1)));
   }
+  this.setText = function(name, text)
+  {
+    var t= document.getElementById('t' + name);
+    if(t)
+      t.textContent= text;
+  }
 }
 document.addEventListener("DOMContentLoaded", function ()
 {
