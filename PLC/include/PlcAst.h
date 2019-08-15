@@ -135,7 +135,11 @@ protected:
           std::unique_ptr<plc::Expression> dep(new plc::Expression(var->second));
           plc::Term term(dep);
 
-          it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer));
+          const Variable& variable = variableDescription_.at(it->identifier());
+          if(variable.type() == Variable::Type::Monoflop)
+            it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer, variable.index()));
+          else
+            it->setExpression(new plc::Expression(term));
         }
         break;
       }

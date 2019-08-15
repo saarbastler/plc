@@ -460,6 +460,7 @@
   <ItemGroup>
     <ClInclude Include="include/AvrPlc.h" />
     <ClInclude Include="include\SvgOption.h" />
+    <ClInclude Include="jsConsts.h" />
     <ClInclude Include="ParserInput.h" />
     <ClInclude Include="ParserResult.h" />
     <ClInclude Include="plc2svg.h" />

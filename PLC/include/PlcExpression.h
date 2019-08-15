@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <jsConsts.h>
+
 class PlcAst;
 namespace plc
 {
@@ -166,6 +168,11 @@ namespace plc
       operator_ = op;
     }
 
+    Expression(Term& term, Operator op, unsigned id) : Expression(term, op)
+    {
+      id_ = id;
+    }
+
     void swap(Expression&& other)
     {
       Operator tmp = operator_;
@@ -200,6 +207,11 @@ namespace plc
     Operator op() const
     {
       return operator_;
+    }
+
+    unsigned jsTypeIndex() const
+    {
+      return operator_ == Operator::Timer ? js::Timer : js::Intermediate;
     }
 
     void addTerm(Term& term)

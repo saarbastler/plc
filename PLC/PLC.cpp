@@ -19,16 +19,10 @@ void plcParse(const char *text, PlcAst& plcAst)
   plcParse(in, plcAst);
 }
 
-void convert2svg(const PlcAst& plcAst, const plc::Expression& expression, const std::initializer_list<SVGOption> options, std::ostream& out)
+void convert2svg(const PlcAst& plcAst, const plc::Expression& expression, const std::string& name
+  , std::ostream& out, const std::initializer_list<SVGOption> options)
 {
   Plc2svg plc2svg(plcAst, out, options);
 
-  plc2svg.convert(expression);
-}
-
-void convert2svg(const PlcAst& plcAst, const plc::Expression& expression, std::ostream& out)
-{
-  std::initializer_list<SVGOption> options;
-
-  convert2svg(plcAst, expression, options, out);
+  plc2svg.convert(expression, name);
 }

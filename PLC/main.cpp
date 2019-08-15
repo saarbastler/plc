@@ -36,6 +36,9 @@ namespace po = boost::program_options;
 #define RESOLVE_DEP_NAME  "resolve"
 #define RESOLVE_DEP       RESOLVE_DEP_NAME ",R"
 
+#define LINK_LABELS_NAME  "labels"
+#define LINK_LABELS       LINK_LABELS_NAME
+
 #define USAGE             "Usage: plc [options] plc-file\n  plc -L plcfile\n  plc -E test -O out.svg plcfile\n"
 
 class OptionsException : public std::exception
@@ -109,18 +112,21 @@ int equation(const po::variables_map& vm)
 
   std::ofstream out(vm[OUTPUT_FILE_NAME].as<std::string>());
 
-  std::initializer_list<SVGOption> opt;
+  std::vector<SVGOption> options;
   if (vm.count(NO_JS_NAME))
-    opt = { SVGOption::NoJavascript };
-  else if(!vm.count(INTERACTIVE_NAME))
-    opt = { SVGOption::NotInteractive };
+    options.emplace_back(SVGOption::NoJavascript);
+  else if (!vm.count(INTERACTIVE_NAME))
+    options.emplace_back(SVGOption::NotInteractive);
 
-  Plc2svg plc2svg(plcAst, out, opt);
+  if (vm.count(LINK_LABELS_NAME))
+    options.emplace_back(SVGOption::LinkLabels);
+
+  Plc2svg plc2svg(plcAst, out, options);
 
   if (vm.count(RESOLVE_DEP_NAME))
-    plc2svg.convert(plcAst.resolveDependencies(equationName));
+    plc2svg.convert(plcAst.resolveDependencies(equationName), equationName);
   else
-    plc2svg.convert(equation);
+    plc2svg.convert(equation, equationName);
 
   return  0;
 }
@@ -137,6 +143,7 @@ int main(int argc, char *argv[])
     ( OUTPUTS, "list only Outputs")
     ( INTERACTIVE, "Interactive SVG generation")
     ( NO_JS, "no Javascript at all")
+    ( LINK_LABELS, "Label link wires")
     ( RESOLVE_DEP, "resolve Dependencies in SVG generation")
     ;
 
