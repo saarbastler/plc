@@ -449,7 +449,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="plc.cpp" />
-    <ClCompile Include="plc2svg.cpp" />
+    <ClCompile Include="plc2svgbase.cpp" />
     <ClCompile Include="PlcExpression.cpp" />
     <ClCompile Include="svgHelper.cpp" />
     <ClCompile Include="Tests\TestParserInput.cpp" />
@@ -468,6 +468,7 @@
     <ClInclude Include="include/PlcCompiler.h" />
     <ClInclude Include="include/PlcException.h" />
     <ClInclude Include="include/PlcExpression.h" />
+    <ClInclude Include="plc2svgbase.h" />
     <ClInclude Include="PlcParser.h" />
     <ClInclude Include="include/PlcSimulator.h" />
     <ClInclude Include="Stack.h" />

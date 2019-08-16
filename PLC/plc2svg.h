@@ -5,28 +5,88 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "PlcAst.h"
-#include "svgHelper.h"
-#include "SvgOption.h"
+#include "plc2svgbase.h"
 
-class Plc2svg
+class Plc2svg : public Plc2svgBase
 {
 public:
 
-  Plc2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<SVGOption> options) : plcAst(plcAst), out(out) 
+  Plc2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<SVGOption> options) : Plc2svgBase(plcAst, out, options)
   {
-    setupOptions(options.begin(), options.end());
   }
 
   template<typename AT>
-  Plc2svg(const PlcAst& plcAst, std::ostream& out, const AT& options) : plcAst(plcAst), out(out)
+  Plc2svg(const PlcAst& plcAst, std::ostream& out, const AT& options) : Plc2svgBase(plcAst, out, options)
   {
-    setupOptions(options.begin(), options.end());
+  }
+
+  void convertMultiple(const std::vector<std::string>& names)
+  {
+    std::unordered_map<std::string, plc::Expression> resolved;
+    std::unordered_map<std::string,unsigned> toSkip;
+
+    for (auto it = names.begin(); it != names.end(); it++)
+      resolved[*it]= plcAst.resolveDependencies(*it, &toSkip);
+
+    for (auto it = toSkip.begin(); it != toSkip.end(); it++)
+      if (it->second > 1)
+        signalCrossing.emplace(it->first);
+
+    for (auto it = names.begin(); it != names.end(); it++)
+      resolved[*it].countInputs(inputCountMap);
+
+    setupParameter(resolved, names);
+
+    for (auto it = names.begin(); it != names.end(); it++, yposLast++)
+      convert(yposLast + 1, 0, resolved[*it], plc::Term::Unary::None, &plcAst.getVariable(*it));
+
+    writeOutput();
   }
 
   void convert(const plc::Expression& expression, const std::string& name)
   {
     expression.countInputs(inputCountMap);
+
+    std::vector<std::string> names(1, name);
+    setupParameter(plcAst.equations(), names);
+
+    maxLevel = expression.countLevels();
+
+    const Variable& variable = plcAst.getVariable(name);
+    convert(1, 0, expression, plc::Term::Unary::None, &variable);
+
+    writeOutput();
+  }
+
+private:
+
+  void countLevelCrossings(unsigned level, const plc::Expression& expression)
+  {
+    while (crossingsPerLevel.size() <= level)
+      crossingsPerLevel.emplace_back(0);
+
+    if (!expression.signalName().empty())
+    {
+      auto find = inputCountMap.find(expression.signalName());
+      if (find != inputCountMap.end())
+        ++crossingsPerLevel[level];
+    }
+
+    for (auto it = expression.terms().begin(); it != expression.terms().end(); it++)
+      if (it->type() == plc::Term::Type::Expression)
+        countLevelCrossings(level + 1, *it->expression());
+  }
+
+  void setupParameter(const std::unordered_map<std::string, plc::Expression>& expressions, const std::vector<std::string> names)
+  {
+    maxLevel = 0;
+    for (auto it = names.begin(); it != names.end(); it++)
+    {
+      countLevelCrossings(0, expressions.at(*it));
+      unsigned tmp = expressions.at(*it).countLevels();
+      if (tmp > maxLevel)
+        maxLevel = tmp;
+    }
 
     unsigned crossings = 0;
     unsigned chars = 0;
@@ -40,107 +100,33 @@ public:
         crossings++;
     }
 
+    crossingsPerLevel.emplace_back(crossings);
+
     textWidth = chars * CHAR_WIDTH;
-    crossingWidth = crossings * CROSSING_WIDTH;
-    maxLevel = expression.countLevels();
-
-    const Variable& variable = plcAst.getVariable(name);
-    convert(1, 1, expression, plc::Term::Unary::None, &variable);
-
-    out << SVG_HEADER;
-
-    if (!hasOption(SVGOption::NoJavascript))
-    {
-      out << SVG_FUNCTIONS_JS_START
-        << "this.svg = new SVGData(" << plcAst.countVariableOfType(Variable::Type::Input) << ", "
-        << plcAst.countVariableOfType(Variable::Type::Output) << ", "
-        << plcAst.countVariableOfType(Variable::Type::Monoflop) << ", "
-        << plc::Expression::lastId() << ", function(data) {"
-        << jsOut.str()
-        << "});" << std::endl;
-
-      if (!hasOption(SVGOption::NotInteractive))
-      {
-        out
-          << "var that=this;" << std::endl
-        << "this.toggleInput = function(event) { that.svg.toggleById(event.target.id); } " << std::endl;
-        for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
-        {
-          const Variable& variable = plcAst.getVariable(it->first);
-          unsigned index = variable.index();
-
-          out << "document.getElementById('" << variableTypeIdentifier(variable.type()) << index << "').addEventListener('click',that.toggleInput);" << std::endl;
-        }
-      }
-
-      out << SVG_FUNCTIONS_JS_END;
-    }
-
-    out << SVG_FOOTER
-      << svgOut.str()
-      << "</svg>" 
-      << std::endl;
   }
-
-
-private:
-
-  bool hasOption(SVGOption option)
-  {
-    return optionBitvector & (1 << static_cast<unsigned>(option));
-  }
-
-  template <typename Iterator>
-  void setupOptions(Iterator begin, Iterator end)
-  {
-    unsigned tmp = 0;
-    for (auto it = begin; it != end; it++)
-      tmp |= 1 << static_cast<unsigned>(*it);
-
-    optionBitvector = tmp;
-  }
-
-  static constexpr const char *BOX = "box";
-  static constexpr const char *VARIABLE = "variable";
-  static constexpr const char *LINK = "link";
-  static constexpr const char *INVERT = "invert";
-  static constexpr const char *JOIN = "join";
-
-  static constexpr const unsigned XSTART = 10;
-  static constexpr const unsigned CHAR_HEIGHT = 20;
-  static constexpr const unsigned CHAR_WIDTH = 10;
-  static constexpr const unsigned CHAR_OFFSET = 5;
-  static constexpr const int CHAR_OFFSET_Y = -2;
-  static constexpr const unsigned LINE_LENGTH = 50;
-  static constexpr const unsigned GATE_WIDTH = 75;
-  static constexpr const unsigned INVERT_RADIUS = 4;
-  static constexpr const unsigned CROSSING_WIDTH = 10;
-  static constexpr const unsigned JOIN_RADIUS = 2;
-
-  static const char *SVG_HEADER;
-  static const char *SVG_FUNCTIONS_JS_START;
-  static const char *SVG_FUNCTIONS_DOM_CONTENT_LOADED;
-  static const char *SVG_FUNCTIONS_JS_END;
-  static const char *SVG_FUNCTIONS_A;
-  static const char *SVG_FUNCTIONS_B;
-  static const char *SVG_FUNCTIONS_TOGGLE_INPUT;
-  static const char *SVG_FOOTER;
 
   unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary, const Variable *variable = nullptr)
   {
+    //std::cout << "convert Expression " << expression.signalName() << " " << expression.id() << " ypos: " << ypos << " level: " << level << std::endl;
+
+    if (ypos > yposLast)
+      yposLast = ypos;
+    
     unsigned size = 0;
     unsigned index = 1;
-    unsigned width = textWidth + (maxLevel - level) * (LINE_LENGTH + GATE_WIDTH) + LINE_LENGTH;
+    unsigned width = textWidth + (maxLevel - level - 1) * (LINE_LENGTH + GATE_WIDTH) + LINE_LENGTH;
     unsigned outy = (index + ypos) * CHAR_HEIGHT;
 
     for (const plc::Term& term : expression.terms())
     {
       unsigned y = (index + ypos) * CHAR_HEIGHT;
+      if (index + ypos > yposLast)
+        yposLast = index + ypos;
 
       switch (term.type())
       {
       case plc::Term::Type::Identifier:
-        convertInput(term, y, width);
+        convertInput(term, level, y, width);
 
         index++;
         size++;
@@ -159,25 +145,26 @@ private:
       }
     }
 
-    int lineX1 = crossingWidth + width;
-    int lineX2 = crossingWidth + width + GATE_WIDTH + LINE_LENGTH;
+    unsigned lineX1 = crossingWidthUpToLevel(level) + width;
+    unsigned lineX2 = crossingWidthUpToLevel(level - 1) + width + GATE_WIDTH + LINE_LENGTH;
 
     if (unary != plc::Term::Unary::None)
       lineX2 -= 2 * INVERT_RADIUS;
 
-    if (expression.op() != plc::Expression::Operator::None || expression.terms().size() > 1)
+    if (expression.op() != plc::Expression::Operator::None /*|| expression.terms().size() > 1*/)
     {
-      lineX1 += GATE_WIDTH;
-      svgOut << svg::Rect(crossingWidth + width, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
-        << svg::Text(crossingWidth + width + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
+      svgOut << svg::Rect(lineX1, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
+        << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
 
       if ( hasOption(SVGOption::BoxText))
       {
         std::ostringstream tid;
         tid << 't' << gateCssClass(expression);
 
-        svgOut << svg::Text(crossingWidth + width + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
+        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
       }
+
+      lineX1 += GATE_WIDTH;
     }
     
     if (variable)
@@ -203,21 +190,39 @@ private:
         svgOut << svg::Text(lineX2 - 3 * CHAR_WIDTH, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, gateCssClass(expression), {});
     }
 
+    if (signalCrossing.find(expression.signalName()) != signalCrossing.end())
+      inputPosition.emplace(expression.signalName(), COORD{ lineX1 + CROSSING_WIDTH, outy });
+
     expressionJsEquation(expression);
 
     return size;
   }
 
-  void convertInput(const plc::Term& term, unsigned y, unsigned width)
+  unsigned crossingWidthUpToLevel(unsigned level)
+  {
+    unsigned crossingWidth = 0;
+    for (int i = int(crossingsPerLevel.size()) - 1; i > int(level); i--)
+      crossingWidth += crossingsPerLevel[i];
+
+    return crossingWidth * CHAR_WIDTH;
+  }
+
+  void convertInput(const plc::Term& term, unsigned level, unsigned y, unsigned width)
   {
     const Variable& variable = plcAst.getVariable(term.identifier());
 
     unsigned x = XSTART;
     auto input = inputPosition.find(term.identifier());
-    if (input == inputPosition.end())
+
+    if (input == inputPosition.end() )
     {
-      crossingCount++;
-      inputPosition.emplace(term.identifier(), COORD{ XSTART + textWidth + crossingCount * CROSSING_WIDTH, y });
+      auto inputCount = inputCountMap.find(term.identifier());
+      if (inputCount != inputCountMap.end() && inputCount->second > 1)
+      {
+        //std::cout << "crossing " << term.identifier() << ": " << crossingCount << std::endl;
+        inputPosition.emplace(term.identifier(), COORD{ XSTART + textWidth + crossingCount * CROSSING_WIDTH, y });
+        ++crossingCount;
+      }
 
       std::ostringstream id;
       id << variableTypeIdentifier(variable.type()) << variable.index();
@@ -232,63 +237,18 @@ private:
       input->second.y = y;
     }
     
+    int lineX1 = crossingWidthUpToLevel(level) + width;
+
     if (term.unary() == plc::Term::Unary::None)
-      svgOut << svg::Line(x, y, crossingWidth + width, y, { LINK, variableCssClass(variable) });
+      svgOut << svg::Line(x, y, lineX1, y, { LINK, variableCssClass(variable) });
     else
-      svgOut << svg::Line(x, y, crossingWidth + width - 2 * INVERT_RADIUS, y, { LINK, variableCssClass(variable) })
-      << svg::Circle(crossingWidth + width - INVERT_RADIUS, y, INVERT_RADIUS, { INVERT, variableCssClass(variable) });
+      svgOut << svg::Line(x, y, lineX1 - 2 * INVERT_RADIUS, y, { LINK, variableCssClass(variable) })
+      << svg::Circle(lineX1 - INVERT_RADIUS, y, INVERT_RADIUS, { INVERT, variableCssClass(variable) });
 
     if (hasOption(SVGOption::LinkLabels))
-      svgOut << svg::Text(crossingWidth + width - 3 * CHAR_WIDTH, y + CHAR_OFFSET_Y, variableCssClass(variable), {});
+      svgOut << svg::Text(lineX1 - 3 * CHAR_WIDTH, y + CHAR_OFFSET_Y, variableCssClass(variable), {});
   }
   
-  static char variableTypeIdentifier(Variable::Type type)
-  {
-    switch (type)
-    {
-    case Variable::Type::Input:     return 'i';
-    case Variable::Type::Output:    return 'o';
-    case Variable::Type::Monoflop:  return 'm';
-    default:
-      throw PlcAstException("undefined Variable Type: %d", int(type));
-    }
-  }
-
-  const char *variableCssClass(const Variable& variable)
-  {
-    std::ostringstream out;
-
-    out << variableTypeIdentifier(variable.type()) << variable.index();
-    tmpCssClass = out.str();
-
-    return tmpCssClass.c_str();
-  }
-
-  const char *gateCssClass(const plc::Expression& expression)
-  {
-    std::ostringstream out;
-    out << (expression.op() == plc::Expression::Operator::Timer ? 'm' : 'g') << expression.id();
-    tmpCssClass = out.str();
-
-    return tmpCssClass.c_str();
-  }
-
-  const char *operatorSymbol(plc::Expression::Operator op)
-  {
-    switch (op)
-    {
-    case plc::Expression::Operator::And:
-      return "&";
-    case plc::Expression::Operator::Or:
-      return "\xE2\x89\xA5 1";
-    case plc::Expression::Operator::Timer:
-      return "\xE2\xAD\xB2 t";
-    default:
-      return "?";
-    }
-  }
-  std::string tmpCssClass;
-
   void expressionJsEquation(const plc::Expression& expression)
   {
     if (!hasOption(SVGOption::NotInteractive) || expression.op() != plc::Expression::Operator::Timer)
@@ -326,27 +286,13 @@ private:
     }
   }
 
+  unsigned yposLast = 0;
+
   unsigned maxLevel = 0;
-  unsigned crossingWidth = 0;
   unsigned crossingCount = 0;
   unsigned textWidth = 0;
 
-  const PlcAst& plcAst;
-  std::ostream& out;
-
-  std::ostringstream svgOut;
-  std::ostringstream jsOut;
-
-  struct COORD
-  {
-    unsigned x;
-    unsigned y;
-  };
-
-  std::unordered_map<std::string, unsigned> inputCountMap;
-  std::unordered_map<std::string, COORD> inputPosition;
-
-  unsigned optionBitvector;
+  std::vector<unsigned> crossingsPerLevel;
 };
 
 #endif // !_INCLUDE_PLC_2_SVG_H_

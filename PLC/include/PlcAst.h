@@ -4,6 +4,7 @@
 #include <exception>
 #include <cstdarg>
 #include <unordered_map>
+#include <unordered_set>
 #include <stdio.h>
 
 #include "PlcExpression.h"
@@ -104,42 +105,62 @@ public:
     return equations_;
   }
 
-  const plc::Expression resolveDependencies(const std::string& name)
+  const plc::Expression resolveDependencies(const std::string& name, std::unordered_map<std::string,unsigned> *toSkip= nullptr) const
   {
     if (!equationExists(name))
       throw PlcAstException("Equation %s does not exist.", name.c_str());
 
-    plc::Expression all(equations_[name]);
+    plc::Expression all(equations_.at(name));
 
-    resolveDependencies(all);
+    resolveDependencies(all, toSkip);
 
     return all;
   }
 
 protected:
 
-  void resolveDependencies(plc::Expression& expression)
+  void resolveDependencies(plc::Expression& expression, std::unordered_map<std::string, unsigned> *toSkip) const
   {
     for (auto it = expression.terms_.begin(); it != expression.terms_.end(); it++)
     {
+      bool found = true;
+
       switch (it->type())
       {
       case plc::Term::Type::Expression:
-        resolveDependencies(*it->expression().get());
+        resolveDependencies(*it->expression().get(), toSkip);
         break;
 
       case plc::Term::Type::Identifier:
         auto var = equations_.find(it->identifier());
-        if (var != equations_.end())
+        if (toSkip && var != equations_.end())
         {
-          std::unique_ptr<plc::Expression> dep(new plc::Expression(var->second));
-          plc::Term term(dep);
-
-          const Variable& variable = variableDescription_.at(it->identifier());
-          if(variable.type() == Variable::Type::Monoflop)
-            it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer, variable.index()));
+          auto skipFound = toSkip->find(it->identifier());
+          if (skipFound == toSkip->end())
+          {
+            (*toSkip)[it->identifier()] = 1;
+          }
           else
-            it->setExpression(new plc::Expression(term));
+          {
+            skipFound->second++;
+            found = false;
+          }
+        }
+
+        if (found)
+        {
+          if (var != equations_.end())
+          {
+            std::unique_ptr<plc::Expression> dep(new plc::Expression(var->second));
+            dep->signalName_.clear();
+            plc::Term term(dep);
+
+            const Variable& variable = variableDescription_.at(it->identifier());
+            if (variable.type() == Variable::Type::Monoflop)
+              it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer, variable.index(), it->identifier()));
+            else
+              it->setExpression(new plc::Expression(term, it->identifier()));
+          }
         }
         break;
       }

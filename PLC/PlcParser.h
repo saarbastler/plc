@@ -139,7 +139,7 @@ protected:
     if (!parser.next(parserResult).is(ParserResult::Type::Char, '='))
       throw ParserException("missing '=' after variable '%s' equation", name.c_str());
 
-    std::unique_ptr<plc::Expression> expression(new plc::Expression());
+    std::unique_ptr<plc::Expression> expression(new plc::Expression(name));
     parseExpression(expression);
     if (!parser.next(parserResult).is(ParserResult::Type::Char, ';'))
       throw ParserException("missing ';' after expression");

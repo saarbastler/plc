@@ -145,6 +145,41 @@ namespace plc
     {
     }
 
+    Expression(const std::string& signalName) : Expression()
+    {
+      signalName_ = signalName;
+    }
+
+    Expression(Term& term) : Expression()
+    {
+      addTerm(term);
+    }
+
+    Expression(Term& term, const std::string& signalName) : Expression(term)
+    {
+      signalName_ = signalName;
+    }
+
+    Expression(Term& term, Operator op) : Expression(term)
+    {
+      operator_ = op;
+    }
+
+    Expression(Term& term, Operator op, const std::string& signalName) : Expression(term, op)
+    {
+      signalName_ = signalName;
+    }
+
+    Expression(Term& term, Operator op, unsigned id) : Expression(term, op)
+    {
+      id_ = id;
+    }
+
+    Expression(Term& term, Operator op, unsigned id, const std::string& signalName) : Expression(term, op, id)
+    {
+      signalName_ = signalName;
+    }
+
     Expression(const Expression& other)
     {
       operator_ = other.operator_;
@@ -156,21 +191,7 @@ namespace plc
       });
 
       id_= other.id_;
-    }
-
-    Expression(Term& term) : Expression()
-    {
-      addTerm(term);
-    }
-
-    Expression(Term& term, Operator op) : Expression(term)
-    {
-      operator_ = op;
-    }
-
-    Expression(Term& term, Operator op, unsigned id) : Expression(term, op)
-    {
-      id_ = id;
+      signalName_ = other.signalName_;
     }
 
     void swap(Expression&& other)
@@ -287,6 +308,11 @@ namespace plc
       return idCounter;
     }
 
+    const std::string& signalName() const
+    {
+      return signalName_;
+    }
+
   private:
 
     friend class ::PlcAst;
@@ -298,6 +324,8 @@ namespace plc
     /// </summary>
     unsigned id_;
     static unsigned idCounter;
+
+    std::string signalName_;
   };
 }
 

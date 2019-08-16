@@ -1,7 +1,7 @@
-#include "plc2svg.h"
+#include "plc2svgbase.h"
 
-const char *Plc2svg::SVG_HEADER = R"~~~(<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="800" height="800">
+const char *Plc2svgBase::SVG_HEADER = R"~~~(<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000">
 <defs>
 <style type="text/css">
 <![CDATA[
@@ -14,7 +14,7 @@ line.test { stroke:#f00; }
 ]]>
 </style>)~~~";
 
-const char *Plc2svg::SVG_FUNCTIONS_JS_START = R"~~~(
+const char *Plc2svgBase::SVG_FUNCTIONS_JS_START = R"~~~(
 <script type="text/javascript"><![CDATA[
 function SVGData(inputs,outputs,timer,intermediates, logicfn)
 {
@@ -73,9 +73,9 @@ document.addEventListener("DOMContentLoaded", function ()
 {
 )~~~";
 
-const char *Plc2svg::SVG_FUNCTIONS_JS_END = R"~~~(
+const char *Plc2svgBase::SVG_FUNCTIONS_JS_END = R"~~~(
 });]]></script>)~~~";
 
-const char *Plc2svg::SVG_FOOTER = R"~~~(
+const char *Plc2svgBase::SVG_JS_FOOTER = R"~~~(
 </defs>
 )~~~";

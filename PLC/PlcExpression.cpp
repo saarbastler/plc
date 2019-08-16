@@ -30,6 +30,10 @@ std::ostream& operator<<(std::ostream& out, const plc::Term& term)
 std::ostream& operator<<(std::ostream& out, const plc::Expression& expression)
 {
   out << "Expression(";
+  out << expression.id() << ',';
+  if (!expression.signalName().empty())
+    out << expression.signalName() << ',';
+
   std::string opText;
 
   for (auto& it : expression.terms())

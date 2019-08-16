@@ -21,6 +21,9 @@ namespace po = boost::program_options;
 #define LIST_NAME         "list"
 #define LIST              LIST_NAME ",L"
 
+#define ALL_NAME          "all"
+#define ALL               ALL_NAME ",A"
+
 #define OUTPUTS_NAME      "outputs"
 #define OUTPUTS           OUTPUTS_NAME ",o"
 
@@ -103,16 +106,6 @@ int equation(const po::variables_map& vm)
     return 1;
   }
 
-  const std::string& equationName = vm[EQUATION_NAME].as<std::string>();
-  if (!plcAst.equationExists(equationName))
-  {
-    std::cout << "Error: Equation " << equationName << " does not exists.";
-
-    return 1;
-  }
-
-  const plc::Expression& equation = plcAst.equations().at(equationName);
-
   std::ofstream out(vm[OUTPUT_FILE_NAME].as<std::string>());
 
   std::vector<SVGOption> options;
@@ -126,11 +119,32 @@ int equation(const po::variables_map& vm)
     options.emplace_back(SVGOption::BoxText);
 
   Plc2svg plc2svg(plcAst, out, options);
+  if (vm.count(ALL_NAME))
+  {
+    std::vector<std::string> names;
+    for (auto it = plcAst.equations().begin(); it != plcAst.equations().end(); it++)
+      if (plcAst.variableExists(it->first) && plcAst.getVariable(it->first).type() == Variable::Type::Output)
+        names.emplace_back(it->first);
 
-  if (vm.count(RESOLVE_DEP_NAME))
-    plc2svg.convert(plcAst.resolveDependencies(equationName), equationName);
+    plc2svg.convertMultiple(names);
+  }
   else
-    plc2svg.convert(equation, equationName);
+  {
+    const std::string& equationName = vm[EQUATION_NAME].as<std::string>();
+    if (!plcAst.equationExists(equationName))
+    {
+      std::cout << "Error: Equation " << equationName << " does not exists.";
+
+      return 1;
+    }
+
+    const plc::Expression& equation = plcAst.equations().at(equationName);
+
+    if (vm.count(RESOLVE_DEP_NAME))
+      plc2svg.convert(plcAst.resolveDependencies(equationName), equationName);
+    else
+      plc2svg.convert(equation, equationName);
+  }
 
   return  0;
 }
@@ -142,7 +156,8 @@ int main(int argc, char *argv[])
     ( "help,?", "Show Help")
     ( INPUT_FILE, po::value<std::string>()->required(), "plc file")
     ( OUTPUT_FILE, po::value<std::string>(), "output file")
-    ( EQUATION, po::value<std::string>(), "use Equation arg")
+    ( EQUATION, po::value<std::string>(), "convert a single Equation")
+    ( ALL, "convert all Equations")
     ( LIST, "list Equations")
     ( OUTPUTS, "list only Outputs")
     ( INTERACTIVE, "Interactive SVG generation")
@@ -167,12 +182,15 @@ int main(int argc, char *argv[])
       return 0;
     }
 
+    if (vm.count(LIST_NAME) + vm.count(EQUATION_NAME) + vm.count(ALL_NAME) > 1)
+      throw OptionsException("Only one Option of " LIST_NAME ", " EQUATION_NAME " or " ALL_NAME " accepted.");
+
     if (vm.count(LIST_NAME))
       return list(vm[INPUT_FILE_NAME].as<std::string>(), vm.count(OUTPUTS_NAME) > 0);
-    else if (vm.count(EQUATION_NAME))
+    else if (vm.count(EQUATION_NAME) || vm.count(ALL_NAME))
       return equation(vm);
     else
-      throw OptionsException("at least -E or -L argument needed");
+      throw OptionsException("at least one Option of " LIST_NAME ", " EQUATION_NAME " or " ALL_NAME " necessary");
   }
   catch (const std::exception& ex)
   {
