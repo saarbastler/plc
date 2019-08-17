@@ -2,6 +2,7 @@
 
 #include "PlcParser.h"
 #include "plc2svg.h"
+#include <PlcCompiler.h>
 
 void plcParse(std::istream& in, PlcAst& plcAst)
 {
@@ -37,4 +38,13 @@ void convert2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer
       names.emplace_back(it->first);
 
   plc2svg.convertMultiple(names);
+}
+
+void translate2Avr(const PlcAst& plcAst, std::vector<uint8_t>& avrplc)
+{
+  std::vector<plc::Operation> instructions;
+  plc::compile(plcAst, instructions);
+
+  avrplc.clear();
+  plc::translateAvr(instructions, avrplc);
 }

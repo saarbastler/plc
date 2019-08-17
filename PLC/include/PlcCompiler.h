@@ -16,6 +16,7 @@ namespace plc
     case Variable::Type::Input:     return Instruction::ReadInput;
     case Variable::Type::Output:    return Instruction::ReadOutput;
     case Variable::Type::Monoflop:  return Instruction::ReadMonoflop;
+    case Variable::Type::Flag:      return Instruction::ReadFlag;
     default:
       throw PlcAstException("undefined Variable Type: %d", int(type));
     }
@@ -27,6 +28,7 @@ namespace plc
     {
     case Variable::Type::Output:    return Instruction::WriteOuput;
     case Variable::Type::Monoflop:  return Instruction::WriteMonoflop;
+    case Variable::Type::Flag:      return Instruction::WriteFlag;
     default:
       throw PlcAstException("undefined Variable Type: %d", int(type));
     }

@@ -41,6 +41,11 @@ public:
 
   using VariableDescriptionType = std::unordered_map<std::string, Variable>;
 
+  void swap(PlcAst& other)
+  {
+    std::swap(variableDescription_, other.variableDescription_);
+  }
+
   void clear()
   {
     variableDescription_.clear();
