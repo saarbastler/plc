@@ -161,7 +161,7 @@ private:
         std::ostringstream tid;
         tid << 't' << gateCssClass(expression);
 
-        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, /*""*/ tid.str().c_str(), {}, tid.str().c_str());
+        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
       }
 
       lineX1 += GATE_WIDTH;
