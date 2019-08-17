@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include <jsConsts.h>
+#include <Variable.h>
 
 class PlcAst;
 namespace plc
@@ -16,7 +17,7 @@ namespace plc
   class Expression;
 
   // Term= '(' Expression ')'
-  //     | !Expression
+  //     | !Term
   //     | Identifier
 
   class Term
@@ -37,7 +38,10 @@ namespace plc
     {
     }
 
-    Term(const Term& other);
+    Term(const Term& other)
+    {
+      *this = other;
+    }
 
     Term(std::unique_ptr<Expression>& expression)
     {
@@ -55,7 +59,7 @@ namespace plc
       other.unary_ = utmp;
 
       std::swap(expression_, other.expression_);
-      std::swap(identifier_, other.identifier_);
+      std::swap(variable_, other.variable_);
     }
 
     void clear()
@@ -63,14 +67,14 @@ namespace plc
       type_ = Type::Empty;
       unary_ = Unary::None;
       expression_.reset();
-      identifier_.clear();
+      variable_ = nullptr;
     }
 
-    void operator=(const std::string& identifier)
+    void operator=(const Variable& variable)
     {
       unary_ = Unary::None;
       type_ = Type::Identifier;
-      identifier_ = identifier;
+      variable_ = &variable;
     }
 
     void operator=(std::unique_ptr<Expression>& expression)
@@ -107,16 +111,16 @@ namespace plc
       return expression_;
     }
 
-    const std::string& identifier() const
+    const Variable *variable() const
     {
-      return identifier_;
+      return variable_;
     }
 
     void setExpression(Expression *expression)
     {
       expression_.reset(expression);
       type_ = Type::Expression;
-      identifier_.clear();
+      variable_ = nullptr;
     }
 
   private:
@@ -124,7 +128,7 @@ namespace plc
     Unary unary_ = Unary::None;
     Type type_ = Type::Empty;
     std::unique_ptr<Expression> expression_;
-    std::string identifier_;
+    const Variable *variable_ = nullptr;
   };
 
   // Expression= Term
@@ -135,19 +139,17 @@ namespace plc
   public:
 
     // ordered by precedence, highest last
-
     enum class Operator
     {
       None, Or, And, Timer
     };
 
-    Expression() : id_(idCounter++)
+    Expression() : id_(Expression::nextId())
     {
     }
 
-    Expression(const std::string& signalName) : Expression()
+    Expression(unsigned id) : id_(id)
     {
-      signalName_ = signalName;
     }
 
     Expression(Term& term) : Expression()
@@ -155,9 +157,14 @@ namespace plc
       addTerm(term);
     }
 
-    Expression(Term& term, const std::string& signalName) : Expression(term)
+    Expression(Operator op, const std::vector<Term>& terms) : Expression()
     {
-      signalName_ = signalName;
+      operator_ = op;
+      for (auto it = terms.begin(); it != terms.end(); it++)
+      {
+        plc::Term t(*it);
+        addTerm(t);
+      }
     }
 
     Expression(Term& term, Operator op) : Expression(term)
@@ -165,19 +172,9 @@ namespace plc
       operator_ = op;
     }
 
-    Expression(Term& term, Operator op, const std::string& signalName) : Expression(term, op)
-    {
-      signalName_ = signalName;
-    }
-
     Expression(Term& term, Operator op, unsigned id) : Expression(term, op)
     {
       id_ = id;
-    }
-
-    Expression(Term& term, Operator op, unsigned id, const std::string& signalName) : Expression(term, op, id)
-    {
-      signalName_ = signalName;
     }
 
     Expression(const Expression& other)
@@ -191,17 +188,15 @@ namespace plc
       });
 
       id_= other.id_;
-      signalName_ = other.signalName_;
+      variable_ = other.variable_;
     }
 
-    void swap(Expression&& other)
+    Expression(Expression&& other)
     {
-      Operator tmp = operator_;
-      operator_ = other.operator_;
-      other.operator_ = tmp;
-
+      std::swap(operator_, other.operator_);
       std::swap(id_, other.id_);
       std::swap(terms_, other.terms_);
+      std::swap(variable_, other.variable_);
     }
 
     void clear()
@@ -230,11 +225,6 @@ namespace plc
       return operator_;
     }
 
-    unsigned jsTypeIndex() const
-    {
-      return operator_ == Operator::Timer ? js::Timer : js::Intermediate;
-    }
-
     void addTerm(Term& term)
     {
       terms_.emplace_back();
@@ -261,7 +251,6 @@ namespace plc
     /// Counts the number Expression levels.
     /// </summary>
     /// <returns>The enumber of levels</returns>
-
     unsigned countLevels() const
     {
       unsigned level = 0;
@@ -280,15 +269,14 @@ namespace plc
     /// Counts the inputs, the map keys the input name to the number of occurence.
     /// </summary>
     /// <param name="inputs">The input count.</param>
-
     void countInputs(std::unordered_map<std::string, unsigned>& inputs) const
     {
       for (const Term& term : terms_)
         if (term.type() == Term::Type::Identifier)
         {
-          auto count = inputs.find(term.identifier());
+          auto count = inputs.find(term.variable()->name());
           if (count == inputs.end())
-            inputs[term.identifier()] = 1;
+            inputs[term.variable()->name()] = 1;
           else
             (count->second)++;
         }
@@ -308,12 +296,22 @@ namespace plc
       return idCounter;
     }
 
-    const std::string& signalName() const
+    const Variable *variable() const
     {
-      return signalName_;
+      return variable_;
+    }
+
+    void setVariable(const Variable *variable)
+    {
+      variable_ = variable;
     }
 
   private:
+
+    static unsigned nextId()
+    {
+      return ++idCounter;
+    }
 
     friend class ::PlcAst;
 
@@ -325,7 +323,7 @@ namespace plc
     unsigned id_;
     static unsigned idCounter;
 
-    std::string signalName_;
+    const Variable *variable_ = nullptr;
   };
 }
 

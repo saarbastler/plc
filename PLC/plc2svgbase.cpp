@@ -16,11 +16,11 @@ line.test { stroke:#f00; }
 
 const char *Plc2svgBase::SVG_FUNCTIONS_JS_START = R"~~~(
 <script type="text/javascript"><![CDATA[
-function SVGData(inputs,outputs,timer,intermediates, logicfn)
+function SVGData(inputs,outputs,timer,intermediates,flags,logicfn)
 {
   this.data = [ Array(inputs).fill(false), Array(outputs).fill(false),
-    Array(timer).fill(false), Array(intermediates).fill(false) ];
-  this.prefix = [ 'i', 'o', 'm', 'g' ];
+    Array(timer).fill(false), Array(flags).fill(false), Array(intermediates).fill(false) ];
+  this.prefix = [ 'i', 'o', 'm', 'f', 'g' ];
   var that= this;
   
   function updateElement(name, value)

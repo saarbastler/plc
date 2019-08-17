@@ -71,9 +71,9 @@ int list(const std::string& inputfile, bool onlyOutputs)
   {
     plcParse(in, plcAst);
 
-    for (auto it = plcAst.equations().begin(); it != plcAst.equations().end(); it++)
+    for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
       if (!onlyOutputs ||
-        (onlyOutputs && plcAst.variableExists(it->first) && plcAst.getVariable(it->first).type() == Variable::Type::Output))
+        (onlyOutputs && it->second.type() == Variable::Type::Output))
       {
         std::cout << it->first << std::endl;
       }
@@ -122,8 +122,8 @@ int equation(const po::variables_map& vm)
   if (vm.count(ALL_NAME))
   {
     std::vector<std::string> names;
-    for (auto it = plcAst.equations().begin(); it != plcAst.equations().end(); it++)
-      if (plcAst.variableExists(it->first) && plcAst.getVariable(it->first).type() == Variable::Type::Output)
+    for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
+      if (plcAst.getVariable(it->first).type() == Variable::Type::Output && it->second.expression().operator bool())
         names.emplace_back(it->first);
 
     plc2svg.convertMultiple(names);
@@ -131,14 +131,15 @@ int equation(const po::variables_map& vm)
   else
   {
     const std::string& equationName = vm[EQUATION_NAME].as<std::string>();
-    if (!plcAst.equationExists(equationName))
+    const Variable& variable(plcAst.getVariable(equationName));
+    if (!variable.expression().operator bool())
     {
       std::cout << "Error: Equation " << equationName << " does not exists.";
 
       return 1;
     }
 
-    const plc::Expression& equation = plcAst.equations().at(equationName);
+    const plc::Expression& equation = *variable.expression();
 
     if (vm.count(RESOLVE_DEP_NAME))
       plc2svg.convert(plcAst.resolveDependencies(equationName), equationName);

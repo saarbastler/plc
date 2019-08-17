@@ -41,7 +41,7 @@ namespace plc
     {
       if (term.type() == Term::Type::Identifier)
       {
-        const Variable& variable = plcAst.getVariable(term.identifier());
+        const Variable& variable = plcAst.getVariable(term.variable()->name());
 
         emitter(readInstruction(variable.type()), variable.index());
         if (term.unary() == Term::Unary::Not)
@@ -61,21 +61,21 @@ namespace plc
     }
   }
 
-  void compile(const PlcAst& plcAst, const Expression& expression, const std::string& targetVariable, std::vector<Operation>& instructions)
+  void compile(const PlcAst& plcAst, const Expression& expression, const Variable& variable, std::vector<Operation>& instructions)
   {
     compile(plcAst, expression, [&instructions](plc::Instruction instruction, unsigned argument) 
     {
       instructions.emplace_back(Operation{ instruction, argument });
     });
 
-    const Variable& variable = plcAst.getVariable(targetVariable);
     instructions.emplace_back(Operation{ writeInstruction(variable.type()), variable.index() });
   }
 
   void compile(const PlcAst& plcAst, std::vector<Operation>& instructions)
   {
-    for (auto it = plcAst.equations().begin(); it != plcAst.equations().end(); it++)
-      plc::compile(plcAst, it->second, it->first, instructions);
+    for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
+      if(it->second.expression().operator bool())
+        plc::compile(plcAst, *it->second.expression().get(), it->second, instructions);
   }
 
   void avrArgument(int8_t avrOp, unsigned argument, std::vector<uint8_t>& avrplc)

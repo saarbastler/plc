@@ -74,12 +74,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Term)
 
   plcParser.parseTermMock(term);
   BOOST_CHECK(term.type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(term.identifier(), "abc");
+  BOOST_CHECK_EQUAL(term.variable()->name(), "abc");
   BOOST_CHECK(term.unary() == plc::Term::Unary::None);
 
   plcParser.parseTermMock(term);
   BOOST_CHECK(term.type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(term.identifier(), "xyz");
+  BOOST_CHECK_EQUAL(term.variable()->name(), "xyz");
   BOOST_CHECK(term.unary() == plc::Term::Unary::Not);
 
   BOOST_CHECK_THROW(plcParser.parseTermMock(term), ParserException);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence1)
   BOOST_CHECK_EQUAL(expression->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0]);
   BOOST_CHECK(expression->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[1]);
   BOOST_CHECK(expression->terms()[1].expression());
@@ -115,10 +115,10 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence1)
   BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms().size(),2);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0]);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].variable()->name(), "b");
   BOOST_CHECK(expression->terms()[1].expression()->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].variable()->name(), "c");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence2)
@@ -149,13 +149,13 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence2)
   BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[0]);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->terms()[0].expression()->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[1].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[1].variable()->name(), "b");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].variable()->name(), "c");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence3)
@@ -185,13 +185,13 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence3)
   BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[0]);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->terms()[0].expression()->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[0].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[1].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[0].expression()->terms()[1].variable()->name(), "b");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].variable()->name(), "c");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence4)
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence4)
   BOOST_CHECK_EQUAL(expression->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0]);
   BOOST_CHECK(expression->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[1]);
   BOOST_CHECK(expression->terms()[1].expression());
@@ -224,10 +224,10 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence4)
   BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms().size(), 2);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0]);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].variable()->name(), "b");
   BOOST_CHECK(expression->terms()[1].expression()->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].variable()->name(), "c");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence5)
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence5)
   BOOST_CHECK_EQUAL(expression->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0]);
   BOOST_CHECK(expression->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[1]);
   BOOST_CHECK(expression->terms()[1].expression());
@@ -261,12 +261,12 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence5)
   BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms().size(), 3);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0]);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].variable()->name(), "b");
   BOOST_CHECK(expression->terms()[1].expression()->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].variable()->name(), "c");
   BOOST_CHECK(expression->terms()[1].expression()->terms()[2].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[2].identifier(), "d");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[2].variable()->name(), "d");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence6)
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence6)
   BOOST_CHECK_EQUAL(expression->terms().size(), 2);
   BOOST_CHECK(expression->terms()[0]);
   BOOST_CHECK(expression->terms()[0].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[0].identifier(), "a");
+  BOOST_CHECK_EQUAL(expression->terms()[0].variable()->name(), "a");
   BOOST_CHECK(expression->op() == plc::Expression::Operator::Or);
   BOOST_CHECK(expression->terms()[1]);
   BOOST_CHECK(expression->terms()[1].expression());
@@ -304,14 +304,14 @@ BOOST_AUTO_TEST_CASE(PlcParser_Expression_Precedence6)
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].expression());
   BOOST_CHECK(*expression->terms()[1].expression()->terms()[0].expression());
   BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].expression()->terms().size(),2);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].expression()->terms()[0].identifier(), "b");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].expression()->terms()[0].variable()->name(), "b");
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].expression()->op() == plc::Expression::Operator::And);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[0].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].expression()->terms()[1].identifier(), "c");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[0].expression()->terms()[1].variable()->name(), "c");
 
   BOOST_CHECK(expression->terms()[1].expression()->terms()[1]);
   BOOST_CHECK(expression->terms()[1].expression()->terms()[1].type() == plc::Term::Type::Identifier);
-  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].identifier(), "d");
+  BOOST_CHECK_EQUAL(expression->terms()[1].expression()->terms()[1].variable()->name(), "d");
 }
 
 BOOST_AUTO_TEST_CASE(PlcParser_Expression_Levels1)

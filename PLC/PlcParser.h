@@ -27,8 +27,10 @@ public:
           parseVariables(Variable::Type::Input);
         else if (boost::algorithm::iequals(parserResult.text(), "outputs"))
           parseVariables(Variable::Type::Output);
-        else if (boost::algorithm::iequals(parserResult.text(), "monoflops"))
+        else if (boost::algorithm::iequals(parserResult.text(), "monoflops") || boost::algorithm::iequals(parserResult.text(), "timer"))
           parseVariables(Variable::Type::Monoflop);
+        else if (boost::algorithm::iequals(parserResult.text(), "flags"))
+          parseVariables(Variable::Type::Flag);
         else
           parseEquation(parserResult.text());
       }
@@ -50,10 +52,7 @@ protected:
     ParserResult parserResult;
     if (parser.next(parserResult).type() == ParserResult::Type::Identifier)
     {
-      if (!plcAst.variableExists(parserResult.text()))
-        throw ParserException("Variable '%s' does not exist", parserResult.text().c_str());
-
-      term = parserResult.text();
+      term = plcAst.getVariable(parserResult.text());
     }
     else if (parserResult.is(ParserResult::Type::Char, '!'))
     {
@@ -139,13 +138,17 @@ protected:
     if (!parser.next(parserResult).is(ParserResult::Type::Char, '='))
       throw ParserException("missing '=' after variable '%s' equation", name.c_str());
 
-    std::unique_ptr<plc::Expression> expression(new plc::Expression(name));
+    Variable& variable = plcAst.getVariable(name);
+    std::unique_ptr<plc::Expression> expression(new plc::Expression(variable.index()));
     parseExpression(expression);
     if (!parser.next(parserResult).is(ParserResult::Type::Char, ';'))
       throw ParserException("missing ';' after expression");
 
-    plc::Expression tmp(*expression.release());
-    plcAst.addEquation(name, tmp);
+    if (variable.expression().operator bool())
+      throw ParserException("Two Expressions are assigned to Variable '%s'", name);
+
+    variable.expression().swap(expression);
+    variable.expression()->setVariable(&variable);
   }
 
   void parseVariables(Variable::Type type)

@@ -6,7 +6,8 @@ namespace js
   constexpr unsigned Input = 0;
   constexpr unsigned Output = 1;
   constexpr unsigned Timer = 2;
-  constexpr unsigned Intermediate = 3;
+  constexpr unsigned Flag = 3;
+  constexpr unsigned Intermediate = 4;
 
 }
 

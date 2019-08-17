@@ -40,15 +40,13 @@ class PlcAst
 public:
 
   using VariableDescriptionType = std::unordered_map<std::string, Variable>;
-  using EquationType = std::unordered_map<std::string, plc::Expression>;
 
   void clear()
   {
     variableDescription_.clear();
-    equations_.clear();
   }
 
-  bool variableExists(const std::string& name)
+  bool variableExists(const std::string& name) const
   {
     return variableDescription_.find(name) != variableDescription_.end();
   }
@@ -70,47 +68,38 @@ public:
     return it->second;
   }
 
+  Variable& getVariable(const std::string& name)
+  {
+    auto it = variableDescription_.find(name);
+    if (it == variableDescription_.end())
+      throw PlcAstException("Variable '%s' does not exist", name.c_str());
+
+    return it->second;
+  }
+
   const VariableDescriptionType& variableDescription() const
   {
     return variableDescription_;
   }
 
-  unsigned countVariableOfType(Variable::Type t) const
+  unsigned maxVariableIndexOfType(Variable::Type t) const
   {
-    unsigned count = 0;
+    unsigned index = 0;
     for (auto it = variableDescription_.begin(); it != variableDescription_.end(); it++)
-      if (it->second.type() == t)
-        ++count;
+      if (it->second.type() == t && it->second.index() > index)
+        index= it->second.index();
 
-    return count;
-  }
-
-  bool equationExists(const std::string& name) const
-  {
-    return equations_.find(name) != equations_.end();
-  }
-
-  void addEquation(const std::string& name, plc::Expression& expression)
-  {
-    if (equationExists(name))
-      throw PlcAstException("Equation for '%s' already exists.", name.c_str());
-
-    //std::cout << name << " = " << expression << std::endl;
-
-    equations_[name] = std::move(expression);
-  }
-
-  const EquationType& equations() const
-  {
-    return equations_;
+    return index;
   }
 
   const plc::Expression resolveDependencies(const std::string& name, std::unordered_map<std::string,unsigned> *toSkip= nullptr) const
   {
-    if (!equationExists(name))
-      throw PlcAstException("Equation %s does not exist.", name.c_str());
+    const Variable& variable = getVariable(name);
 
-    plc::Expression all(equations_.at(name));
+    if (!variable.expression().operator bool())
+      throw PlcAstException("Expression %s does not exist.", name.c_str());
+
+    plc::Expression all(*variable.expression());
 
     resolveDependencies(all, toSkip);
 
@@ -132,13 +121,13 @@ protected:
         break;
 
       case plc::Term::Type::Identifier:
-        auto var = equations_.find(it->identifier());
-        if (toSkip && var != equations_.end())
+        const plc::Expression *pExpression = it->variable()->expression().get();        
+        if (toSkip && pExpression)
         {
-          auto skipFound = toSkip->find(it->identifier());
+          auto skipFound = toSkip->find(it->variable()->name());
           if (skipFound == toSkip->end())
           {
-            (*toSkip)[it->identifier()] = 1;
+            (*toSkip)[it->variable()->name()] = 1;
           }
           else
           {
@@ -147,30 +136,41 @@ protected:
           }
         }
 
-        if (found)
+        if (found && pExpression)
         {
-          if (var != equations_.end())
+          if (pExpression->terms().size() == 1)
           {
-            std::unique_ptr<plc::Expression> dep(new plc::Expression(var->second));
-            dep->signalName_.clear();
+            plc::Term copyTerm(pExpression->terms()[0]);
+
+            plc::Expression::Operator op = (it->variable()->type() == Variable::Type::Monoflop) ? plc::Expression::Operator::Timer : plc::Expression::Operator::None;
+
+            plc::Expression *expression = new plc::Expression(copyTerm, op, pExpression->id());
+            expression->setVariable(pExpression->variable());
+            it->setExpression(expression);
+          }
+          else
+          {
+            std::unique_ptr<plc::Expression> dep(new plc::Expression(pExpression->op(), pExpression->terms()));
             plc::Term term(dep);
 
-            const Variable& variable = variableDescription_.at(it->identifier());
-            if (variable.type() == Variable::Type::Monoflop)
-              it->setExpression(new plc::Expression(term, plc::Expression::Operator::Timer, variable.index(), it->identifier()));
+            plc::Expression *expression = nullptr;
+            
+            if (it->variable()->type() == Variable::Type::Monoflop)
+              expression = new plc::Expression(term, plc::Expression::Operator::Timer, it->variable()->index());
             else
-              it->setExpression(new plc::Expression(term, it->identifier()));
+              expression = new plc::Expression(term);
+
+            expression->setVariable(it->variable());
+            it->setExpression(expression);
           }
+
         }
         break;
       }
     }
-
-
   }
 
   VariableDescriptionType variableDescription_;
-  EquationType equations_;
 };
 
 #endif // _INCLUDE_PLC_AST_H_

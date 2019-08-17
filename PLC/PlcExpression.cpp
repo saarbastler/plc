@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& out, const plc::Term& term)
       out << *term.expression() << " )";
       break;
     case plc::Term::Type::Identifier:
-      out << term.identifier() << " )";
+      out << term.variable()->name() << " )";
       break;
     default:
       out << "Undefined Type: " << int(term.type()) << " )";
@@ -31,8 +31,8 @@ std::ostream& operator<<(std::ostream& out, const plc::Expression& expression)
 {
   out << "Expression(";
   out << expression.id() << ',';
-  if (!expression.signalName().empty())
-    out << expression.signalName() << ',';
+  if (expression.variable())
+    out << expression.variable()->name() << ',';
 
   std::string opText;
 
@@ -68,23 +68,14 @@ std::ostream& operator<<(std::ostream& out, const plc::Expression& expression)
 
 namespace plc
 {
-
-  Term::Term(const Term& other)
-  {
-    unary_ = other.unary_;
-    type_ = other.type_;
-    if (other.expression_)
-      expression_.reset(new Expression(*other.expression_));
-    identifier_ = other.identifier_;
-  }
-
   void Term::operator=(const Term& other)
   {
     unary_ = other.unary_;
     type_ = other.type_;
     if (other.expression_)
       expression_.reset(new Expression(*other.expression_));
-    identifier_ = other.identifier_;
+    //identifier_ = other.identifier_;
+    variable_ = other.variable_;
   }
 
 }

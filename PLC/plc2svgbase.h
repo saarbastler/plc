@@ -71,10 +71,11 @@ protected:
     if (!hasOption(SVGOption::NoJavascript))
     {
       out << SVG_FUNCTIONS_JS_START
-        << "this.svg = new SVGData(" << plcAst.countVariableOfType(Variable::Type::Input) << ", "
-        << plcAst.countVariableOfType(Variable::Type::Output) << ", "
-        << plcAst.countVariableOfType(Variable::Type::Monoflop) << ", "
-        << plc::Expression::lastId() << ", function(data) {"
+        << "this.svg = new SVGData(" << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Input) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Output) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Monoflop) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Flag) << ", "
+        << 1 + plc::Expression::lastId() << ", function(data) {" << std::endl
         << jsOut.str()
         << "});" << std::endl;
 
@@ -109,6 +110,7 @@ protected:
     case Variable::Type::Input:     return 'i';
     case Variable::Type::Output:    return 'o';
     case Variable::Type::Monoflop:  return 'm';
+    case Variable::Type::Flag:      return 'f';
     default:
       throw PlcAstException("undefined Variable Type: %d", int(type));
     }
@@ -127,8 +129,11 @@ protected:
 
   const char *gateCssClass(const plc::Expression& expression)
   {
+    if (expression.variable())
+      return variableCssClass(*expression.variable());
+
     std::ostringstream out;
-    out << (expression.op() == plc::Expression::Operator::Timer ? 'm' : 'g') << expression.id();
+    out << 'g' << expression.id();
     tmpCssClass = out.str();
 
     return tmpCssClass.c_str();

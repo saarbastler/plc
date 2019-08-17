@@ -23,10 +23,14 @@ public:
   void convertMultiple(const std::vector<std::string>& names)
   {
     std::unordered_map<std::string, plc::Expression> resolved;
+    std::vector<const plc::Expression*> expressions;
     std::unordered_map<std::string,unsigned> toSkip;
 
     for (auto it = names.begin(); it != names.end(); it++)
-      resolved[*it]= plcAst.resolveDependencies(*it, &toSkip);
+    {
+      resolved.emplace(*it, plcAst.resolveDependencies(*it, &toSkip));
+      expressions.emplace_back(&resolved[*it]);
+    }
 
     for (auto it = toSkip.begin(); it != toSkip.end(); it++)
       if (it->second > 1)
@@ -35,10 +39,11 @@ public:
     for (auto it = names.begin(); it != names.end(); it++)
       resolved[*it].countInputs(inputCountMap);
 
-    setupParameter(resolved, names);
+    setupParameter(expressions);
 
-    for (auto it = names.begin(); it != names.end(); it++, yposLast++)
-      convert(yposLast + 1, 0, resolved[*it], plc::Term::Unary::None, &plcAst.getVariable(*it));
+    unsigned y = 1;
+    for (auto it = names.begin(); it != names.end(); it++)
+      y+= 2 + convert(y, 0, resolved[*it], plc::Term::Unary::None, &plcAst.getVariable(*it));
 
     writeOutput();
   }
@@ -47,8 +52,8 @@ public:
   {
     expression.countInputs(inputCountMap);
 
-    std::vector<std::string> names(1, name);
-    setupParameter(plcAst.equations(), names);
+    std::array<const plc::Expression*, 1> a{ &expression };
+    setupParameter(a);
 
     maxLevel = expression.countLevels();
 
@@ -65,9 +70,9 @@ private:
     while (crossingsPerLevel.size() <= level)
       crossingsPerLevel.emplace_back(0);
 
-    if (!expression.signalName().empty())
+    if (expression.variable())
     {
-      auto find = inputCountMap.find(expression.signalName());
+      auto find = inputCountMap.find(expression.variable()->name());
       if (find != inputCountMap.end())
         ++crossingsPerLevel[level];
     }
@@ -77,13 +82,14 @@ private:
         countLevelCrossings(level + 1, *it->expression());
   }
 
-  void setupParameter(const std::unordered_map<std::string, plc::Expression>& expressions, const std::vector<std::string> names)
+  template <typename T>
+  void setupParameter(T v)
   {
     maxLevel = 0;
-    for (auto it = names.begin(); it != names.end(); it++)
+    for (auto it = v.begin(); it != v.end(); it++)
     {
-      countLevelCrossings(0, expressions.at(*it));
-      unsigned tmp = expressions.at(*it).countLevels();
+      countLevelCrossings(0, **it);
+      unsigned tmp = (*it)->countLevels();
       if (tmp > maxLevel)
         maxLevel = tmp;
     }
@@ -108,9 +114,6 @@ private:
   unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary, const Variable *variable = nullptr)
   {
     //std::cout << "convert Expression " << expression.signalName() << " " << expression.id() << " ypos: " << ypos << " level: " << level << std::endl;
-
-    if (ypos > yposLast)
-      yposLast = ypos;
     
     unsigned size = 0;
     unsigned index = 1;
@@ -120,9 +123,6 @@ private:
     for (const plc::Term& term : expression.terms())
     {
       unsigned y = (index + ypos) * CHAR_HEIGHT;
-      if (index + ypos > yposLast)
-        yposLast = index + ypos;
-
       switch (term.type())
       {
       case plc::Term::Type::Identifier:
@@ -161,7 +161,7 @@ private:
         std::ostringstream tid;
         tid << 't' << gateCssClass(expression);
 
-        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
+        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, /*""*/ tid.str().c_str(), {}, tid.str().c_str());
       }
 
       lineX1 += GATE_WIDTH;
@@ -173,10 +173,10 @@ private:
       if (int(len) < lineX2 - lineX1)
         len = lineX2 - lineX1;
 
-      if(hasOption(SVGOption::NotInteractive))
+      //if(hasOption(SVGOption::NotInteractive))
         svgOut << svg::Line(lineX1, outy, lineX1 + len, outy, { LINK, variableCssClass(*variable) });
-      else
-        svgOut << svg::Line(lineX1, outy, lineX1 + len, outy, { LINK, gateCssClass(expression) });
+      //else
+      //  svgOut << svg::Line(lineX1, outy, lineX1 + len, outy, { LINK, gateCssClass(expression) });
 
       svgOut << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, variable->name().c_str(), {});
     }
@@ -190,8 +190,8 @@ private:
         svgOut << svg::Text(lineX2 - 3 * CHAR_WIDTH, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, gateCssClass(expression), {});
     }
 
-    if (signalCrossing.find(expression.signalName()) != signalCrossing.end())
-      inputPosition.emplace(expression.signalName(), COORD{ lineX1 + CROSSING_WIDTH, outy });
+    if(expression.variable() && signalCrossing.find(expression.variable()->name()) != signalCrossing.end())
+      inputPosition.emplace(expression.variable()->name(), COORD{ lineX1 + CROSSING_WIDTH, outy });
 
     expressionJsEquation(expression);
 
@@ -209,30 +209,29 @@ private:
 
   void convertInput(const plc::Term& term, unsigned level, unsigned y, unsigned width)
   {
-    const Variable& variable = plcAst.getVariable(term.identifier());
+    const Variable& variable = *term.variable();
 
     unsigned x = XSTART;
-    auto input = inputPosition.find(term.identifier());
+    auto input = inputPosition.find(term.variable()->name());
 
+    std::string cssClass(variableCssClass(variable));
     if (input == inputPosition.end() )
     {
-      auto inputCount = inputCountMap.find(term.identifier());
+      auto inputCount = inputCountMap.find(term.variable()->name());
       if (inputCount != inputCountMap.end() && inputCount->second > 1)
       {
-        //std::cout << "crossing " << term.identifier() << ": " << crossingCount << std::endl;
-        inputPosition.emplace(term.identifier(), COORD{ XSTART + textWidth + crossingCount * CROSSING_WIDTH, y });
+        //std::cout << "crossing " << term.variable()->name() << ": " << crossingCount << std::endl;
+        inputPosition.emplace(term.variable()->name(), COORD{ XSTART + textWidth + crossingCount * CROSSING_WIDTH, y });
         ++crossingCount;
       }
 
-      std::ostringstream id;
-      id << variableTypeIdentifier(variable.type()) << variable.index();
-      svgOut << svg::Text(x, y + CHAR_OFFSET_Y, term.identifier(), { VARIABLE, variableCssClass(variable) }, id.str().c_str());
+      svgOut << svg::Text(x, y + CHAR_OFFSET_Y, term.variable()->name(), { VARIABLE, cssClass.c_str() }, cssClass.c_str());
     }
     else
     {
       x = input->second.x;
-      svgOut << svg::Circle(x, input->second.y, JOIN_RADIUS, { JOIN, variableCssClass(variable) })
-        << svg::Line(x, input->second.y, x, y, { LINK, variableCssClass(variable) });
+      svgOut << svg::Circle(x, input->second.y, JOIN_RADIUS, { JOIN, cssClass.c_str() })
+        << svg::Line(x, input->second.y, x, y, { LINK, cssClass.c_str() });
 
       input->second.y = y;
     }
@@ -240,20 +239,46 @@ private:
     int lineX1 = crossingWidthUpToLevel(level) + width;
 
     if (term.unary() == plc::Term::Unary::None)
-      svgOut << svg::Line(x, y, lineX1, y, { LINK, variableCssClass(variable) });
+      svgOut << svg::Line(x, y, lineX1, y, { LINK, cssClass.c_str() });
     else
-      svgOut << svg::Line(x, y, lineX1 - 2 * INVERT_RADIUS, y, { LINK, variableCssClass(variable) })
-      << svg::Circle(lineX1 - INVERT_RADIUS, y, INVERT_RADIUS, { INVERT, variableCssClass(variable) });
+      svgOut << svg::Line(x, y, lineX1 - 2 * INVERT_RADIUS, y, { LINK, cssClass.c_str() })
+      << svg::Circle(lineX1 - INVERT_RADIUS, y, INVERT_RADIUS, { INVERT, cssClass.c_str() });
 
     if (hasOption(SVGOption::LinkLabels))
-      svgOut << svg::Text(lineX1 - 3 * CHAR_WIDTH, y + CHAR_OFFSET_Y, variableCssClass(variable), {});
+      svgOut << svg::Text(lineX1 - 3 * CHAR_WIDTH, y + CHAR_OFFSET_Y, cssClass.c_str(), {});
   }
   
+  unsigned jsType(const plc::Expression& expression) const
+  {
+    if(expression.variable())
+    {
+      return static_cast<unsigned>(expression.variable()->type());
+    }
+    else
+    {
+      return js::Intermediate;
+    }
+  }
+
+  unsigned jsTypeIndex(const plc::Expression& expression) const
+  {
+    if (expression.variable())
+    {
+      return expression.variable()->index();
+    }
+    else
+    {
+      return expression.id();
+    }
+  }
+
   void expressionJsEquation(const plc::Expression& expression)
   {
-    if (!hasOption(SVGOption::NotInteractive) || expression.op() != plc::Expression::Operator::Timer)
+    unsigned type = jsType(expression);
+    if (!hasOption(SVGOption::NotInteractive) || 
+      (type != static_cast<unsigned>(Variable::Type::Monoflop) && (type != static_cast<unsigned>(Variable::Type::Output))))
     {
-      jsOut << "data[" << expression.jsTypeIndex() << "][" << expression.id() << "]= ";
+      jsOut << "data[" << jsType(expression) << "][" << jsTypeIndex(expression) << "]= ";
 
       bool first = true;
       char opChar = (expression.op() == plc::Expression::Operator::And) ? '&' : '|';
@@ -271,13 +296,13 @@ private:
         {
         case plc::Term::Type::Identifier:
         {
-          const Variable& v = plcAst.getVariable(t.identifier());
+          const Variable& v = plcAst.getVariable(t.variable()->name());
           jsOut << "data[" << static_cast<int>(v.type()) << "][" << v.index() << ']';
         }
         break;
 
         case plc::Term::Type::Expression:
-          jsOut << "data[" << t.expression()->jsTypeIndex() << "][" << t.expression()->id() << ']';
+          jsOut << "data[" << jsType(*t.expression()) << "][" << jsTypeIndex(*t.expression()) << ']';
           break;
         }
       }
@@ -285,8 +310,6 @@ private:
       jsOut << ";" << std::endl;
     }
   }
-
-  unsigned yposLast = 0;
 
   unsigned maxLevel = 0;
   unsigned crossingCount = 0;
