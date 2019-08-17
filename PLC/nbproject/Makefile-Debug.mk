@@ -35,10 +35,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/PLC.o \
 	${OBJECTDIR}/PlcExpression.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/plc2svg.o \
+	${OBJECTDIR}/plc2svgbase.o \
 	${OBJECTDIR}/svgHelper.o
 
 
@@ -68,11 +67,6 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libplc.a: ${OBJECTFILES}
 	${AR} -rv ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libplc.a ${OBJECTFILES} 
 	$(RANLIB) ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libplc.a
 
-${OBJECTDIR}/PLC.o: PLC.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PLC.o PLC.cpp
-
 ${OBJECTDIR}/PlcExpression.o: PlcExpression.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -83,10 +77,10 @@ ${OBJECTDIR}/main.o: main.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
-${OBJECTDIR}/plc2svg.o: plc2svg.cpp
+${OBJECTDIR}/plc2svgbase.o: plc2svgbase.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc2svg.o plc2svg.cpp
+	$(COMPILE.cc) -g -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc2svgbase.o plc2svgbase.cpp
 
 ${OBJECTDIR}/svgHelper.o: svgHelper.cpp
 	${MKDIR} -p ${OBJECTDIR}

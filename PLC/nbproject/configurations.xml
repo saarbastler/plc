@@ -11,6 +11,7 @@
       <itemPath>PlcParser.h</itemPath>
       <itemPath>Stack.h</itemPath>
       <itemPath>plc2svg.h</itemPath>
+      <itemPath>plc2svgbase.h</itemPath>
       <itemPath>svgHelper.h</itemPath>
     </logicalFolder>
     <logicalFolder name="include" displayName="include" projectFiles="true">
@@ -30,9 +31,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>PLC.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
-      <itemPath>plc2svg.cpp</itemPath>
+      <itemPath>plc.cpp</itemPath>
+      <itemPath>plc2svgbase.cpp</itemPath>
       <itemPath>svgHelper.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -67,8 +68,6 @@
         <archiverTool>
         </archiverTool>
       </compileType>
-      <item path="PLC.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="Parser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ParserInput.h" ex="false" tool="3" flavor2="0">
@@ -99,9 +98,11 @@
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="plc2svg.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="plc2svg.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="plc2svgbase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="plc2svgbase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="svgHelper.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -136,8 +137,6 @@
         <archiverTool>
         </archiverTool>
       </compileType>
-      <item path="PLC.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="Parser.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ParserInput.h" ex="false" tool="3" flavor2="0">
@@ -168,9 +167,13 @@
       </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="plc2svg.cpp" ex="false" tool="1" flavor2="0">
+      <item path="plc.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="plc2svg.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="plc2svgbase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="plc2svgbase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="svgHelper.cpp" ex="false" tool="1" flavor2="0">
       </item>

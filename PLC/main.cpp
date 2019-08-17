@@ -53,7 +53,7 @@ public:
 
   OptionsException(const char *msg) : msg(msg) {}
 
-  virtual const char *what() const
+  virtual const char *what() const noexcept
   {
     return msg;
   }
