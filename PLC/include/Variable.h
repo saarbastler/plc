@@ -21,18 +21,25 @@ public:
   {
   }
 
+  Variable(const std::string& name, Type type, unsigned index, unsigned time) : Variable(name, type, index)
+  {
+    time_ = time;
+  }
+
   Variable(const Variable& other)
   {
     name_ = other.name_;
     type_ = other.type_;
     index_ = other.index_;
+    time_ = other.time_;
   }
 
   void swap(Variable&& other)
   {
     name_.swap(other.name_);
     type_ = other.type_;
-    std::swap(index_,other.index_);
+    std::swap(index_, other.index_); 
+    std::swap(time_, other.time_);
   }
 
   const std::string& name() const
@@ -48,6 +55,11 @@ public:
   unsigned index() const
   {
     return index_;
+  }
+
+  unsigned time() const
+  {
+    return time_;
   }
 
   const std::unique_ptr<plc::Expression>& expression() const
@@ -67,6 +79,7 @@ private:
   std::string name_;
   Type type_;
   unsigned index_;
+  unsigned time_= 0;
 };
 
 #endif // !_INCLUDE_VARIABLE_H_

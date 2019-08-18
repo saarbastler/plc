@@ -165,13 +165,39 @@ protected:
       if (plcAst.variableExists(parserResult.text()))
         throw ParserException("Variable '%s' already declared", parserResult.text().c_str());
 
+      uint64_t timeArg = (type == Variable::Type::Monoflop) ? 30 : 0;
       ParserResult parserResult2;
-      if(!parser.next(parserResult2).is(ParserResult::Type::Char,'='))
+      if (parser.next(parserResult2).is(ParserResult::Type::Char, '(') && type == Variable::Type::Monoflop)
+      {
+        if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
+          throw ParserException("missing Integer Value after Variable '%s' (", parserResult.text().c_str());
+
+        timeArg = parserResult2.intValue();
+
+        if (parser.next(parserResult2).is(ParserResult::Type::Identifier, "s"))
+          timeArg /= 2;
+        else if (parserResult2.is(ParserResult::Type::Identifier, "min"))
+          timeArg *= 30;
+        else if (parserResult2.is(ParserResult::Type::Identifier, "h"))
+          timeArg *= 1800;
+        else
+          throw ParserException("missing Time unit (s,min,h) after Variable '%s' (%d", parserResult.text().c_str(), timeArg);
+
+        if (timeArg > 65535)
+          throw ParserException("Variable '%s' Time value overflow, max is 131071 s", parserResult.text().c_str());
+
+        if (!parser.next(parserResult2).is(ParserResult::Type::Char, ')'))
+          throw ParserException("missing ')' after Variable '%s'", parserResult.text().c_str());
+
+        parser.next(parserResult2);
+      }
+
+      if(!parserResult2.is(ParserResult::Type::Char,'='))
         throw ParserException("missing '=' after Variable '%s'", parserResult.text().c_str());
       if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
         throw ParserException("missing integer value after Variable '%s'=", parserResult.text().c_str());
 
-      plcAst.addVariable( Variable(parserResult.text(), type, unsigned( parserResult2.intValue())));
+      plcAst.addVariable( Variable(parserResult.text(), type, unsigned( parserResult2.intValue()), unsigned(timeArg)));
 
       if (parser.next(parserResult).is(ParserResult::Type::Char, ','))
         continue;
