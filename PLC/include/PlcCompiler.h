@@ -9,7 +9,7 @@
 
 namespace plc
 {
-  Instruction readInstruction(Variable::Type type)
+  inline Instruction readInstruction(Variable::Type type)
   {
     switch (type)
     {
@@ -22,7 +22,7 @@ namespace plc
     }
   }
 
-  Instruction writeInstruction(Variable::Type type)
+  inline Instruction writeInstruction(Variable::Type type)
   {
     switch (type)
     {
@@ -36,7 +36,7 @@ namespace plc
 
   using Emitter = std::function<void(Instruction,unsigned)>;
 
-  void compile(const PlcAst& plcAst, const Expression& expression, Emitter emitter)
+  inline void compile(const PlcAst& plcAst, const Expression& expression, Emitter emitter)
   {
     bool firstTerm = true;
     for (const plc::Term& term : expression.terms())
@@ -63,7 +63,7 @@ namespace plc
     }
   }
 
-  void compile(const PlcAst& plcAst, const Expression& expression, const Variable& variable, std::vector<Operation>& instructions)
+  inline void compile(const PlcAst& plcAst, const Expression& expression, const Variable& variable, std::vector<Operation>& instructions)
   {
     compile(plcAst, expression, [&instructions](plc::Instruction instruction, unsigned argument) 
     {
@@ -73,14 +73,14 @@ namespace plc
     instructions.emplace_back(Operation{ writeInstruction(variable.type()), variable.index() });
   }
 
-  void compile(const PlcAst& plcAst, std::vector<Operation>& instructions)
+  inline void compile(const PlcAst& plcAst, std::vector<Operation>& instructions)
   {
     for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
       if(it->second.expression().operator bool())
         plc::compile(plcAst, *it->second.expression().get(), it->second, instructions);
   }
 
-  void avrArgument(int8_t avrOp, unsigned argument, std::vector<uint8_t>& avrplc)
+  inline void avrArgument(int8_t avrOp, unsigned argument, std::vector<uint8_t>& avrplc)
   {
     if (argument >= avrplc::ARGUMENT_MAXIMUM)
       throw PlcException("argument %d out of bounds, max: %d", argument, avrplc::ARGUMENT_MAXIMUM);
@@ -96,7 +96,7 @@ namespace plc
     }
   }
 
-  void translateAvr(const std::vector<Operation>& instructions, std::vector<uint8_t>& avrplc)
+  inline void translateAvr(const std::vector<Operation>& instructions, std::vector<uint8_t>& avrplc)
   {
     for (const Operation& operation : instructions)
     {

@@ -1,6 +1,7 @@
 #ifndef _INCLUDE_SVG_HELPER_H_
 #define _INCLUDE_SVG_HELPER_H_
 
+#include <cstring>
 #include <iostream>
 #include <initializer_list>
 
@@ -25,8 +26,57 @@ namespace svg
   extern const char LINE[];
   extern const char CIRCLE[];
 
+  constexpr const unsigned CHAR_CELL_WIDTH = 10;
+  constexpr const unsigned CHAR_CELL_HEIGHT = 20;
+
   constexpr const char *FALSE = "false";
   constexpr const char *TRUE = "true";
+  
+  class AreaSize
+  {
+  public:
+
+    static void setMaxXY(int x, int y)
+    {
+      if( x > xMax())
+        xMax() = x;
+
+      if(y > yMax())
+        yMax() = y;
+    }
+
+    static int x()
+    {
+      return xMax();
+    }
+
+    static int y()
+    {
+      return yMax();
+    }
+
+    static void clear()
+    {
+      xMax() = 0;
+      yMax() = 0;
+    }
+
+  private:
+
+    static int& xMax()
+    {
+      static int x = 0;
+
+      return x;
+    }
+
+    static int& yMax()
+    {
+      static int y = 0;
+
+      return y;
+    }
+  };
 
   template<const char *NAME, typename T>
   class Attribute
@@ -135,7 +185,10 @@ namespace svg
   {
   public:
     Rect(int x, int y, int w, int h, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
-      : ElementXY<RECT>(x, y, cssClass, id), w(w), h(h) { }
+      : ElementXY<RECT>(x, y, cssClass, id), w(w), h(h) 
+    { 
+      AreaSize::setMaxXY(x + w, y + h);
+    }
 
     void print(std::ostream& out) const
     {
@@ -155,7 +208,10 @@ namespace svg
   {
   public:
     Line(int x1, int y1, int x2, int y2, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
-      : Element<LINE>(cssClass, id), x1(x1), y1(y1), x2(x2), y2(y2) { }
+      : Element<LINE>(cssClass, id), x1(x1), y1(y1), x2(x2), y2(y2) 
+    {
+      AreaSize::setMaxXY(x2, y2);
+    }
 
     void print(std::ostream& out) const
     {
@@ -177,7 +233,10 @@ namespace svg
   {
   public:
     Circle(int cx, int cy, int r, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
-      : Element<CIRCLE>(cssClass, id), cx(cx), cy(cy), r(r) { }
+      : Element<CIRCLE>(cssClass, id), cx(cx), cy(cy), r(r) 
+    {
+      AreaSize::setMaxXY(cx + r, cy + r);
+    }
 
     void print(std::ostream& out) const
     {
@@ -198,7 +257,11 @@ namespace svg
   {
   public:
     Text(int x, int y, const char *text, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
-      : ElementXY<TEXT>(x, y, cssClass, id), text(text) {}
+      : ElementXY<TEXT>(x, y, cssClass, id), text(text) 
+    {
+      AreaSize::setMaxXY(x + int(strlen(text)) * CHAR_CELL_WIDTH, y + CHAR_CELL_HEIGHT);
+    }
+
     Text(int x, int y, const std::string& text, const std::initializer_list<const char *>& cssClass, const char *id = nullptr) 
       : Text(x, y, text.c_str(), cssClass, id) {}
 

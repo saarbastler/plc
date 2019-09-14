@@ -71,27 +71,27 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libplc.a: ${OBJECTFILES}
 ${OBJECTDIR}/PlcExpression.o: PlcExpression.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PlcExpression.o PlcExpression.cpp
+	$(COMPILE.cc) -O2 -I. -Iinclude -I/home/pi/beast_http_server -I/home/pi/boost_1_68_0 -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/PlcExpression.o PlcExpression.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -O2 -I. -Iinclude -I/home/pi/beast_http_server -I/home/pi/boost_1_68_0 -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 ${OBJECTDIR}/plc.o: plc.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc.o plc.cpp
+	$(COMPILE.cc) -O2 -I. -Iinclude -I/home/pi/beast_http_server -I/home/pi/boost_1_68_0 -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc.o plc.cpp
 
 ${OBJECTDIR}/plc2svgbase.o: plc2svgbase.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc2svgbase.o plc2svgbase.cpp
+	$(COMPILE.cc) -O2 -I. -Iinclude -I/home/pi/beast_http_server -I/home/pi/boost_1_68_0 -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/plc2svgbase.o plc2svgbase.cpp
 
 ${OBJECTDIR}/svgHelper.o: svgHelper.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I. -Iinclude -I../beast_http_server/include -I/home/pi/boost_1_68_0 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/svgHelper.o svgHelper.cpp
+	$(COMPILE.cc) -O2 -I. -Iinclude -I/home/pi/beast_http_server -I/home/pi/boost_1_68_0 -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/svgHelper.o svgHelper.cpp
 
 # Subprojects
 .build-subprojects:

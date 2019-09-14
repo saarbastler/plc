@@ -1,8 +1,8 @@
 #include "plc2svgbase.h"
 
-const char *Plc2svgBase::SVG_HEADER = R"~~~(<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000">
-<defs>
+const char *Plc2svgBase::SVG_HEADER_1 = R"~~~(<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width=")~~~"; // 1000" height="1000">
+const char *Plc2svgBase::SVG_HEADER_2 = R"~~~("><defs>
 <style type="text/css">
 <![CDATA[
 rect.box { stroke:#000; fill:none; }

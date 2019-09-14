@@ -58,10 +58,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
+          <standard>8</standard>
           <incDir>
             <pElem>.</pElem>
             <pElem>include</pElem>
-            <pElem>../beast_http_server/include</pElem>
+            <pElem>/home/pi/beast_http_server</pElem>
             <pElem>/home/pi/boost_1_68_0</pElem>
           </incDir>
         </ccTool>
@@ -121,10 +122,11 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <standard>8</standard>
           <incDir>
             <pElem>.</pElem>
             <pElem>include</pElem>
-            <pElem>../beast_http_server/include</pElem>
+            <pElem>/home/pi/beast_http_server</pElem>
             <pElem>/home/pi/boost_1_68_0</pElem>
           </incDir>
         </ccTool>

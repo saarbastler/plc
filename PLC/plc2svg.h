@@ -41,11 +41,12 @@ public:
 
     setupParameter(expressions);
 
+    svg::AreaSize::clear();
     unsigned y = 1;
     for (auto it = names.begin(); it != names.end(); it++)
       y+= 2 + convert(y, 0, resolved[*it], plc::Term::Unary::None, &plcAst.getVariable(*it));
 
-    writeOutput();
+    writeOutput(svg::AreaSize::x(), svg::AreaSize::y());
   }
 
   void convert(const plc::Expression& expression, const std::string& name)
@@ -57,10 +58,11 @@ public:
 
     maxLevel = expression.countLevels();
 
+    svg::AreaSize::clear();
     const Variable& variable = plcAst.getVariable(name);
-    convert(1, 0, expression, plc::Term::Unary::None, &variable);
+    unsigned y= 2 + convert(1, 0, expression, plc::Term::Unary::None, &variable);
 
-    writeOutput();
+    writeOutput(svg::AreaSize::x(), svg::AreaSize::y());
   }
 
 private:
@@ -108,7 +110,7 @@ private:
 
     crossingsPerLevel.emplace_back(crossings);
 
-    textWidth = chars * CHAR_WIDTH;
+    textWidth = chars * svg::CHAR_CELL_WIDTH;
   }
 
   unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary, const Variable *variable = nullptr)
@@ -118,11 +120,11 @@ private:
     unsigned size = 0;
     unsigned index = 1;
     unsigned width = textWidth + (maxLevel - level - 1) * (LINE_LENGTH + GATE_WIDTH) + LINE_LENGTH;
-    unsigned outy = (index + ypos) * CHAR_HEIGHT;
+    unsigned outy = (index + ypos) * svg::CHAR_CELL_HEIGHT;
 
     for (const plc::Term& term : expression.terms())
     {
-      unsigned y = (index + ypos) * CHAR_HEIGHT;
+      unsigned y = (index + ypos) * svg::CHAR_CELL_HEIGHT;
       switch (term.type())
       {
       case plc::Term::Type::Identifier:
@@ -153,15 +155,15 @@ private:
 
     if (expression.op() != plc::Expression::Operator::None /*|| expression.terms().size() > 1*/)
     {
-      svgOut << svg::Rect(lineX1, ypos * CHAR_HEIGHT, GATE_WIDTH, (size + 1) * CHAR_HEIGHT, { BOX })
-        << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
+      svgOut << svg::Rect(lineX1, ypos * svg::CHAR_CELL_HEIGHT, GATE_WIDTH, (size + 1) * svg::CHAR_CELL_HEIGHT, { BOX })
+        << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * svg::CHAR_CELL_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
 
       if ( hasOption(SVGOption::BoxText))
       {
         std::ostringstream tid;
         tid << 't' << gateCssClass(expression);
 
-        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
+        svgOut << svg::Text(lineX1 + CHAR_OFFSET, (2 + ypos) * svg::CHAR_CELL_HEIGHT + CHAR_OFFSET_Y, "", {}, tid.str().c_str());
       }
 
       lineX1 += GATE_WIDTH;
@@ -169,7 +171,7 @@ private:
     
     if (variable)
     {
-      unsigned len = unsigned(variable->name().length()) * CHAR_WIDTH;
+      unsigned len = unsigned(variable->name().length()) * svg::CHAR_CELL_WIDTH;
       if (int(len) < lineX2 - lineX1)
         len = lineX2 - lineX1;
 
@@ -178,7 +180,7 @@ private:
       //else
       //  svgOut << svg::Line(lineX1, outy, lineX1 + len, outy, { LINK, gateCssClass(expression) });
 
-      svgOut << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, variable->name().c_str(), {});
+      svgOut << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * svg::CHAR_CELL_HEIGHT + CHAR_OFFSET_Y, variable->name().c_str(), {});
     }
     else
     {
@@ -187,7 +189,7 @@ private:
         svgOut << svg::Circle(lineX2 + INVERT_RADIUS, outy, INVERT_RADIUS, { INVERT, gateCssClass(expression) });
 
       if(hasOption(SVGOption::LinkLabels))
-        svgOut << svg::Text(lineX2 - 3 * CHAR_WIDTH, (1 + ypos) * CHAR_HEIGHT + CHAR_OFFSET_Y, gateCssClass(expression), {});
+        svgOut << svg::Text(lineX2 - 3 * svg::CHAR_CELL_WIDTH, (1 + ypos) * svg::CHAR_CELL_HEIGHT + CHAR_OFFSET_Y, gateCssClass(expression), {});
     }
 
     if(expression.variable() && signalCrossing.find(expression.variable()->name()) != signalCrossing.end())
@@ -204,7 +206,7 @@ private:
     for (int i = int(crossingsPerLevel.size()) - 1; i > int(level); i--)
       crossingWidth += crossingsPerLevel[i];
 
-    return crossingWidth * CHAR_WIDTH;
+    return crossingWidth * svg::CHAR_CELL_WIDTH;
   }
 
   void convertInput(const plc::Term& term, unsigned level, unsigned y, unsigned width)
@@ -245,7 +247,7 @@ private:
       << svg::Circle(lineX1 - INVERT_RADIUS, y, INVERT_RADIUS, { INVERT, cssClass.c_str() });
 
     if (hasOption(SVGOption::LinkLabels))
-      svgOut << svg::Text(lineX1 - 3 * CHAR_WIDTH, y + CHAR_OFFSET_Y, cssClass.c_str(), {});
+      svgOut << svg::Text(lineX1 - 3 * svg::CHAR_CELL_WIDTH, y + CHAR_OFFSET_Y, cssClass.c_str(), {});
   }
   
   unsigned jsType(const plc::Expression& expression) const

@@ -30,8 +30,6 @@ protected:
   static constexpr const char *JOIN = "join";
 
   static constexpr const unsigned XSTART = 10;
-  static constexpr const unsigned CHAR_HEIGHT = 20;
-  static constexpr const unsigned CHAR_WIDTH = 10;
   static constexpr const unsigned CHAR_OFFSET = 5;
   static constexpr const int CHAR_OFFSET_Y = -2;
   static constexpr const unsigned LINE_LENGTH = 50;
@@ -40,7 +38,8 @@ protected:
   static constexpr const unsigned CROSSING_WIDTH = 10;
   static constexpr const unsigned JOIN_RADIUS = 2;
 
-  static const char *SVG_HEADER;
+  static const char *SVG_HEADER_1;
+  static const char *SVG_HEADER_2;
   static const char *SVG_FUNCTIONS_JS_START;
   static const char *SVG_FUNCTIONS_DOM_CONTENT_LOADED;
   static const char *SVG_FUNCTIONS_JS_END;
@@ -64,9 +63,9 @@ protected:
     optionBitvector = tmp;
   }
 
-  void writeOutput()
+  void writeOutput(unsigned width, unsigned height)
   {
-    out << SVG_HEADER;
+    out << SVG_HEADER_1 << width << "\" height=\"" << height << SVG_HEADER_2;
 
     if (!hasOption(SVGOption::NoJavascript))
     {
