@@ -148,6 +148,8 @@ protected:
       return "\xE2\x89\xA5 1";
     case plc::Expression::Operator::Timer:
       return "\xE2\xAD\xB2 t";
+    case plc::Expression::Operator::None:
+      return "1";
     default:
       return "?";
     }

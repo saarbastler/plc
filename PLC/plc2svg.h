@@ -153,7 +153,10 @@ private:
     if (unary != plc::Term::Unary::None)
       lineX2 -= 2 * INVERT_RADIUS;
 
-    if (expression.op() != plc::Expression::Operator::None /*|| expression.terms().size() > 1*/)
+    const plc::Term *pt = (expression.terms().size() == 1) ? &expression.terms()[0] : nullptr;
+
+    if (expression.op() != plc::Expression::Operator::None || 
+      (pt != nullptr && pt->unary() != plc::Term::Unary::None))
     {
       svgOut << svg::Rect(lineX1, ypos * svg::CHAR_CELL_HEIGHT, GATE_WIDTH, (size + 1) * svg::CHAR_CELL_HEIGHT, { BOX })
         << svg::Text(lineX1 + CHAR_OFFSET, (1 + ypos) * svg::CHAR_CELL_HEIGHT + CHAR_OFFSET_Y, operatorSymbol(expression.op()), {});
