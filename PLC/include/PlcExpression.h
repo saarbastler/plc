@@ -125,6 +125,12 @@ namespace plc
 
   private:
 
+    friend class Expression;
+    void swapExpression(std::unique_ptr<Expression>& expression)
+    {
+      expression.swap(expression_);
+    }
+
     Unary unary_ = Unary::None;
     Type type_ = Type::Empty;
     std::unique_ptr<Expression> expression_;
@@ -138,6 +144,13 @@ namespace plc
   {
   public:
 
+    enum class Assignment
+    {
+      Assign,
+      Set,
+      Reset
+    };
+
     // ordered by precedence, highest last
     enum class Operator
     {
@@ -148,7 +161,7 @@ namespace plc
     {
     }
 
-    Expression(unsigned id) : id_(id)
+    Expression(unsigned id, Assignment assign = Assignment::Assign) : id_(id), assign_(assign)
     {
     }
 
@@ -193,6 +206,12 @@ namespace plc
 
     Expression(Expression&& other)
     {
+      swap(other);
+    }
+
+    void swap(Expression& other)
+    {
+      std::swap(assign_, other.assign_);
       std::swap(operator_, other.operator_);
       std::swap(id_, other.id_);
       std::swap(terms_, other.terms_);
@@ -231,13 +250,35 @@ namespace plc
       terms_.back().swap(term);
     }
 
+    Assignment assignment() const
+    {
+      return assign_;
+    }
+
+    void pullupFirstTerm()
+    {
+      if (operator_ == Operator::None && terms_.size() == 1 && terms_[0].type() == Term::Type::Expression && terms_[0].unary() == Term::Unary::None)
+      {
+        Term tmp;
+        tmp.swap(terms_[0]);
+
+        std::unique_ptr<Expression> tmpExpr;
+        tmp.swapExpression(tmpExpr);
+
+        tmpExpr->swap(*this);
+
+        id_ = tmpExpr->id();
+        assign_ = tmpExpr->assignment();
+        variable_ = tmpExpr->variable();
+      }
+    }
+
     /// <summary>
     /// A Term is simple, if there is no sub expression
     /// </summary>
     /// <returns>
     ///   <c>true</c> if this instance is simple; otherwise, <c>false</c>.
     /// </returns>
-
     bool isSimple() const
     {
       for (auto&it : terms_)
@@ -306,6 +347,8 @@ namespace plc
       variable_ = variable;
     }
 
+    static const char *assignmentText(plc::Expression::Assignment assignment);
+
   private:
 
     static unsigned nextId()
@@ -314,6 +357,8 @@ namespace plc
     }
 
     friend class ::PlcAst;
+    
+    Assignment assign_;
 
     Operator operator_ = Operator::None;
     std::vector<Term> terms_;

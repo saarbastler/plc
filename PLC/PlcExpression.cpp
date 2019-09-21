@@ -1,5 +1,5 @@
 #include "PlcExpression.h"
-
+#include "ParserResult.h"
 
 unsigned plc::Expression::idCounter = 0;
 
@@ -34,6 +34,8 @@ std::ostream& operator<<(std::ostream& out, const plc::Expression& expression)
   if (expression.variable())
     out << expression.variable()->name() << ',';
 
+  out << plc::Expression::assignmentText(expression.assignment()) << ',';
+
   std::string opText;
 
   for (auto& it : expression.terms())
@@ -66,6 +68,11 @@ std::ostream& operator<<(std::ostream& out, const plc::Expression& expression)
   return out;
 }
 
+const char *plc::Expression::assignmentText(plc::Expression::Assignment assignment)
+{
+  return ParserResult::operatorText(static_cast<ParserResult::Operator>(int(assignment)));
+}
+
 namespace plc
 {
   void Term::operator=(const Term& other)
@@ -77,5 +84,4 @@ namespace plc
     //identifier_ = other.identifier_;
     variable_ = other.variable_;
   }
-
 }

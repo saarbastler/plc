@@ -93,9 +93,22 @@ public:
         ParserResult tmp( result, text );
         parserResult.swap(tmp);
       }
-      else
+      else if (c == '=')
       {
-        parserResult = c;
+        parserResult = ParserResult::Operator::Assign;
+      }
+      else 
+      {
+        char c2 = parserInput.nextChar();
+        if(c == '+' && c2 == '=')
+          parserResult = ParserResult::Operator::Set;
+        else if(c == '-' && c2 == '=')
+          parserResult = ParserResult::Operator::Reset;
+        else
+        {
+          parserInput.pushChar(c2);
+          parserResult = c;
+        }
       }
     }
     else

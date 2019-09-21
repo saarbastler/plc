@@ -134,12 +134,29 @@ protected:
 
   void parseEquation(const std::string& name)
   {
+    plc::Expression::Assignment assignment;
+
     ParserResult parserResult;
-    if (!parser.next(parserResult).is(ParserResult::Type::Char, '='))
-      throw ParserException("missing '=' after variable '%s' equation", name.c_str());
+    if (parser.next(parserResult).type() == ParserResult::Type::Operator)
+      switch (parserResult.intValue())
+      {
+        case int(ParserResult::Operator::Assign) :
+          assignment = plc::Expression::Assignment::Assign;
+          break;
+        case int(ParserResult::Operator::Set) :
+          assignment = plc::Expression::Assignment::Set;
+          break;
+        case int(ParserResult::Operator::Reset) :
+          assignment = plc::Expression::Assignment::Reset;
+          break;
+        default:
+          throw ParserException("missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
+      }
+    else
+      throw ParserException("missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
 
     Variable& variable = plcAst.getVariable(name);
-    std::unique_ptr<plc::Expression> expression(new plc::Expression(variable.index()));
+    std::unique_ptr<plc::Expression> expression(new plc::Expression(variable.index(), assignment));
     parseExpression(expression);
     if (!parser.next(parserResult).is(ParserResult::Type::Char, ';'))
       throw ParserException("missing ';' after expression");
@@ -192,7 +209,7 @@ protected:
         parser.next(parserResult2);
       }
 
-      if(!parserResult2.is(ParserResult::Type::Char,'='))
+      if(!parserResult2.is(ParserResult::Type::Operator,ParserResult::Operator::Assign))
         throw ParserException("missing '=' after Variable '%s'", parserResult.text().c_str());
       if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
         throw ParserException("missing integer value after Variable '%s'=", parserResult.text().c_str());

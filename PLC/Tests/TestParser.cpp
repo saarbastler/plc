@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(Parser_Comments1)
 
   ParserResult parserResult;
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "value"));
-  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, "="));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Assign));
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 0ull));
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "xyz"));
@@ -139,7 +139,6 @@ BOOST_AUTO_TEST_CASE(Parser_Comments5)
   BOOST_CHECK(!parser.next(parserResult).operator bool());
 }
 
-
 BOOST_AUTO_TEST_CASE(Parser_Integers)
 {
   std::istringstream in(
@@ -158,6 +157,35 @@ BOOST_AUTO_TEST_CASE(Parser_Integers)
   BOOST_CHECK_EQUAL(parserResult.text(), "007");
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, "-"));
   BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 32767));
+}
+
+BOOST_AUTO_TEST_CASE(Parser_Operators)
+{
+  std::istringstream in(
+    "a = 0; b += 1; c -= 2; + = - = "
+  );
+
+  ParserInput<2> parserInput(in);
+  Parser<2, 3> parser(parserInput);
+
+  ParserResult parserResult;
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "a"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Assign));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, uint64_t(0)));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "b"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Set));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 1ll));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Identifier, "c"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Reset));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Integer, 2ll));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, ";"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, "+"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Assign));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Char, "-"));
+  BOOST_CHECK(parser.next(parserResult).is(ParserResult::Type::Operator, ParserResult::Operator::Assign));
+
 }
 
 #endif

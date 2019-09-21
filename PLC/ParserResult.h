@@ -12,14 +12,22 @@ public:
     Empty,
     Identifier,
     Char,
-    Integer
+    Integer,
+    Operator
+  };
+
+  enum class Operator
+  {
+    Assign,
+    Set,
+    Reset
   };
 
   ParserResult()
   {
     clear();
   }
-
+  
   ParserResult(const ParserResult& other)
   {
     *this = other;
@@ -71,6 +79,15 @@ public:
     return *this;
   }
 
+  ParserResult& operator =(Operator op)
+  {
+    text_ = operatorText(op);
+    type_ = Type::Operator;
+    intValue_ = uint64_t(op);
+
+    return *this;
+  }
+
   friend std::ostream& operator<<(std::ostream& out, const ParserResult& parserResult)
   {
     out << "ParserResult: ";
@@ -88,6 +105,10 @@ public:
     case ParserResult::Type::Integer:
       out << "Int: " << parserResult.intValue();
       break;
+    case ParserResult::Type::Operator:
+      out << "Operator: " << ParserResult::operatorText(static_cast<Operator>(parserResult.intValue()));
+      break;
+
     default:
       out << "Unknown Type" << static_cast<int>(parserResult.type());
     }
@@ -146,6 +167,21 @@ public:
   bool is(Type type, uint64_t ui) const
   {
     return type == type_ && intValue_ == ui;
+  }
+
+  bool is(Type type, Operator i) const
+  {
+    return type == type_ && intValue_ == uint64_t(i);
+  }
+
+  static const char *operatorText(Operator op)
+  {
+    static const char *texts[]{"=","+=","-="};
+
+    if (unsigned(op) >= sizeof(texts))
+      return "?";
+    else
+      return texts[unsigned(op)];
   }
 
 private:

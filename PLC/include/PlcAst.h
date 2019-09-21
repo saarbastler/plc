@@ -35,10 +35,12 @@ private:
   std::string message;
 };
 
+
 class PlcAst
 {
 public:
 
+  using Op = plc::Expression::Operator;
   using VariableDescriptionType = std::unordered_map<std::string, Variable>;
 
   void swap(PlcAst& other)
@@ -108,6 +110,8 @@ public:
 
     resolveDependencies(all, toSkip);
 
+    all.pullupFirstTerm();
+
     return all;
   }
 
@@ -147,7 +151,7 @@ protected:
           {
             plc::Term copyTerm(pExpression->terms()[0]);
 
-            plc::Expression::Operator op = (it->variable()->type() == Variable::Type::Monoflop) ? plc::Expression::Operator::Timer : plc::Expression::Operator::None;
+            plc::Expression::Operator op = (it->variable()->type() == Variable::Type::Monoflop) ? Op::Timer : Op::None;
 
             plc::Expression *expression = new plc::Expression(copyTerm, op, pExpression->id());
             expression->setVariable(pExpression->variable());
@@ -161,7 +165,7 @@ protected:
             plc::Expression *expression = nullptr;
             
             if (it->variable()->type() == Variable::Type::Monoflop)
-              expression = new plc::Expression(term, plc::Expression::Operator::Timer, it->variable()->index());
+              expression = new plc::Expression(term, Op::Timer, it->variable()->index());
             else
               expression = new plc::Expression(term);
 
