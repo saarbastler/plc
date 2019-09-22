@@ -5,10 +5,12 @@
 
 #include <boost/program_options.hpp>
 
-#include "PlcParser.h"
+//#include "PlcExpressionParser.h"
 #include "plc2svg.h"
 #include "PlcCompiler.h"
 #include "plc.h"
+
+using VariableType = Variable<plc::Expression>;
 
 namespace po = boost::program_options;
 
@@ -73,7 +75,7 @@ int list(const std::string& inputfile, bool onlyOutputs)
 
     for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
       if (!onlyOutputs ||
-        (onlyOutputs && it->second.type() == Variable::Type::Output))
+        (onlyOutputs && it->second.category() == Var::Category::Output))
       {
         std::cout << it->first << std::endl;
       }
@@ -123,7 +125,7 @@ int equation(const po::variables_map& vm)
   {
     std::vector<std::string> names;
     for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
-      if (plcAst.getVariable(it->first).type() == Variable::Type::Output && it->second.expression().operator bool())
+      if (plcAst.getVariable(it->first).category() == Var::Category::Output && it->second.expression().operator bool())
         names.emplace_back(it->first);
 
     plc2svg.convertMultiple(names);
@@ -131,7 +133,7 @@ int equation(const po::variables_map& vm)
   else
   {
     const std::string& equationName = vm[EQUATION_NAME].as<std::string>();
-    const Variable& variable(plcAst.getVariable(equationName));
+    const VariableType& variable(plcAst.getVariable(equationName));
     if (!variable.expression().operator bool())
     {
       std::cout << "Error: Equation " << equationName << " does not exists.";

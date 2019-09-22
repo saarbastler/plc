@@ -454,23 +454,27 @@
     <ClCompile Include="svgHelper.cpp" />
     <ClCompile Include="Tests\TestParserInput.cpp" />
     <ClCompile Include="Tests\TestParser.cpp" />
-    <ClCompile Include="Tests\TestPlcParser.cpp" />
+    <ClCompile Include="Tests\TextPlcExpressionParser.cpp" />
     <ClCompile Include="Tests\TestStack.cpp" />
+    <ClCompile Include="Tests\TestPlcParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include/AvrPlc.h" />
+    <ClInclude Include="include\PlcAst.h" />
+    <ClInclude Include="include\PlcAstException.h" />
     <ClInclude Include="include\SvgOption.h" />
     <ClInclude Include="jsConsts.h" />
     <ClInclude Include="ParserInput.h" />
     <ClInclude Include="ParserResult.h" />
     <ClInclude Include="plc2svg.h" />
-    <ClInclude Include="include/PlcAst.h" />
+    <ClInclude Include="include\PlcAbstractSyntaxTree.h" />
     <ClInclude Include="include/PlcCompiler.h" />
     <ClInclude Include="include/PlcException.h" />
     <ClInclude Include="include/PlcExpression.h" />
     <ClInclude Include="plc2svgbase.h" />
-    <ClInclude Include="PlcParser.h" />
+    <ClInclude Include="PlcExpressionParser.h" />
     <ClInclude Include="include/PlcSimulator.h" />
+    <ClInclude Include="PlcParser.h" />
     <ClInclude Include="Stack.h" />
     <ClInclude Include="Parser.h" />
     <ClInclude Include="svgHelper.h" />

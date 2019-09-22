@@ -1,6 +1,6 @@
 #include "plc.h"
 
-#include "PlcParser.h"
+#include "PlcExpressionParser.h"
 #include "plc2svg.h"
 #include <PlcCompiler.h>
 
@@ -8,7 +8,7 @@ void plcParse(std::istream& in, PlcAst& plcAst)
 {
   ParserInput<2> parserInput(in);
   Parser<2, 2> parser(parserInput);
-  PlcParser<2, 2> plcParser(parser, plcAst);
+  PlcExpressionParser<2, 2> plcParser(parser, plcAst);
 
   plcParser.parse();
 }
@@ -34,7 +34,7 @@ void convert2svg(const PlcAst& plcAst, std::ostream& out, const std::initializer
 
   std::vector<std::string> names;
   for (auto it = plcAst.variableDescription().begin(); it != plcAst.variableDescription().end(); it++)
-    if (plcAst.getVariable(it->first).type() == Variable::Type::Output && it->second.expression().operator bool())
+    if (plcAst.getVariable(it->first).category() == Var::Category::Output && it->second.expression().operator bool())
       names.emplace_back(it->first);
 
   plc2svg.convertMultiple(names);

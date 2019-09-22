@@ -4,24 +4,25 @@
 #include <string>
 #include <memory>
 
-namespace plc
-{
-  class Expression;
-}
-
-class Variable
+class Var
 {
 public:
-  enum class Type
+  enum class Category
   {
     Input, Output, Monoflop, Flag
   };
+};
 
-  Variable(const std::string& name, Type type, unsigned index) : name_(name), type_(type), index_(index) 
+template<typename ExpressiontType>
+class Variable : Var
+{
+public:
+
+  Variable(const std::string& name, Category category, unsigned index) : name_(name), category_(category), index_(index) 
   {
   }
 
-  Variable(const std::string& name, Type type, unsigned index, unsigned time) : Variable(name, type, index)
+  Variable(const std::string& name, Category category, unsigned index, unsigned time) : Variable(name, category, index)
   {
     time_ = time;
   }
@@ -29,7 +30,7 @@ public:
   Variable(const Variable& other)
   {
     name_ = other.name_;
-    type_ = other.type_;
+    category_ = other.category_;
     index_ = other.index_;
     time_ = other.time_;
   }
@@ -37,7 +38,7 @@ public:
   void swap(Variable&& other)
   {
     name_.swap(other.name_);
-    type_ = other.type_;
+    category_ = other.category_;
     std::swap(index_, other.index_); 
     std::swap(time_, other.time_);
   }
@@ -47,9 +48,9 @@ public:
     return name_;
   }
 
-  Type type() const
+  Category category() const
   {
-    return type_;
+    return category_;
   }
 
   unsigned index() const
@@ -62,22 +63,22 @@ public:
     return time_;
   }
 
-  const std::unique_ptr<plc::Expression>& expression() const
+  const std::unique_ptr<ExpressiontType>& expression() const
   {
     return expression_;
   }
 
-  std::unique_ptr<plc::Expression>& expression()
+  std::unique_ptr<ExpressiontType>& expression()
   {
     return expression_;
   }
 
 private:
 
-  std::unique_ptr<plc::Expression> expression_;
+  std::unique_ptr<ExpressiontType> expression_;
 
   std::string name_;
-  Type type_;
+  Category category_;
   unsigned index_;
   unsigned time_= 0;
 };

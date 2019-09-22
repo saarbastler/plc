@@ -9,6 +9,7 @@
 class Plc2svgBase
 {
 public:
+  using VariableType = Variable<plc::Expression>;
 
   Plc2svgBase(const PlcAst& plcAst, std::ostream& out, const std::initializer_list<SVGOption> options) : plcAst(plcAst), out(out)
   {
@@ -70,10 +71,10 @@ protected:
     if (!hasOption(SVGOption::NoJavascript))
     {
       out << SVG_FUNCTIONS_JS_START
-        << "this.svg = new SVGData(" << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Input) << ", "
-        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Output) << ", "
-        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Monoflop) << ", "
-        << 1 + plcAst.maxVariableIndexOfType(Variable::Type::Flag) << ", "
+        << "this.svg = new SVGData(" << 1 + plcAst.maxVariableIndexOfType(Var::Category::Input) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Var::Category::Output) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Var::Category::Monoflop) << ", "
+        << 1 + plcAst.maxVariableIndexOfType(Var::Category::Flag) << ", "
         << 1 + plc::Expression::lastId() << ", function(data) {" << std::endl
         << jsOut.str()
         << "});" << std::endl;
@@ -86,10 +87,10 @@ protected:
         for (auto it = inputCountMap.begin(); it != inputCountMap.end(); it++)
           if (signalCrossing.find(it->first) == signalCrossing.end())
           {
-            const Variable& variable = plcAst.getVariable(it->first);
+            const VariableType& variable = plcAst.getVariable(it->first);
             unsigned index = variable.index();
 
-            out << "document.getElementById('" << variableTypeIdentifier(variable.type()) << index << "').addEventListener('click',that.toggleInput);" << std::endl;
+            out << "document.getElementById('" << variableTypeIdentifier(variable.category()) << index << "').addEventListener('click',that.toggleInput);" << std::endl;
           }
       }
 
@@ -102,24 +103,24 @@ protected:
       << std::endl;
   }
 
-  static char variableTypeIdentifier(Variable::Type type)
+  static char variableTypeIdentifier(Var::Category type)
   {
     switch (type)
     {
-    case Variable::Type::Input:     return 'i';
-    case Variable::Type::Output:    return 'o';
-    case Variable::Type::Monoflop:  return 'm';
-    case Variable::Type::Flag:      return 'f';
+    case Var::Category::Input:     return 'i';
+    case Var::Category::Output:    return 'o';
+    case Var::Category::Monoflop:  return 'm';
+    case Var::Category::Flag:      return 'f';
     default:
       throw PlcAstException("undefined Variable Type: %d", int(type));
     }
   }
 
-  const char *variableCssClass(const Variable& variable)
+  const char *variableCssClass(const VariableType& variable)
   {
     std::ostringstream out;
 
-    out << variableTypeIdentifier(variable.type()) << variable.index();
+    out << variableTypeIdentifier(variable.category()) << variable.index();
 
     tmpCssClass = out.str();
 

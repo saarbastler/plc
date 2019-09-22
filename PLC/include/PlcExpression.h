@@ -15,6 +15,7 @@ class PlcAst;
 namespace plc
 {
   class Expression;
+  using VariableType = Variable<Expression>;
 
   // Term= '(' Expression ')'
   //     | !Term
@@ -70,7 +71,7 @@ namespace plc
       variable_ = nullptr;
     }
 
-    void operator=(const Variable& variable)
+    void operator=(const VariableType& variable)
     {
       unary_ = Unary::None;
       type_ = Type::Identifier;
@@ -111,7 +112,7 @@ namespace plc
       return expression_;
     }
 
-    const Variable *variable() const
+    const VariableType *variable() const
     {
       return variable_;
     }
@@ -134,7 +135,7 @@ namespace plc
     Unary unary_ = Unary::None;
     Type type_ = Type::Empty;
     std::unique_ptr<Expression> expression_;
-    const Variable *variable_ = nullptr;
+    const VariableType *variable_ = nullptr;
   };
 
   // Expression= Term
@@ -337,12 +338,12 @@ namespace plc
       return idCounter;
     }
 
-    const Variable *variable() const
+    const VariableType *variable() const
     {
       return variable_;
     }
 
-    void setVariable(const Variable *variable)
+    void setVariable(const VariableType *variable)
     {
       variable_ = variable;
     }
@@ -368,7 +369,7 @@ namespace plc
     unsigned id_;
     static unsigned idCounter;
 
-    const Variable *variable_ = nullptr;
+    const VariableType *variable_ = nullptr;
   };
 }
 

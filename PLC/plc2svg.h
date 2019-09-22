@@ -59,7 +59,7 @@ public:
     maxLevel = expression.countLevels();
 
     svg::AreaSize::clear();
-    const Variable& variable = plcAst.getVariable(name);
+    const VariableType& variable = plcAst.getVariable(name);
     unsigned y= 2 + convert(1, 0, expression, plc::Term::Unary::None, &variable);
 
     writeOutput(svg::AreaSize::x(), svg::AreaSize::y());
@@ -113,7 +113,7 @@ private:
     textWidth = chars * svg::CHAR_CELL_WIDTH;
   }
 
-  unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary, const Variable *variable = nullptr)
+  unsigned convert(unsigned ypos, unsigned level, const plc::Expression& expression, plc::Term::Unary unary, const VariableType *variable = nullptr)
   {
     //std::cout << "convert Expression " << expression.signalName() << " " << expression.id() << " ypos: " << ypos << " level: " << level << std::endl;
     
@@ -214,7 +214,7 @@ private:
 
   void convertInput(const plc::Term& term, unsigned level, unsigned y, unsigned width)
   {
-    const Variable& variable = *term.variable();
+    const VariableType& variable = *term.variable();
 
     unsigned x = XSTART;
     auto input = inputPosition.find(term.variable()->name());
@@ -257,7 +257,7 @@ private:
   {
     if(expression.variable())
     {
-      return static_cast<unsigned>(expression.variable()->type());
+      return static_cast<unsigned>(expression.variable()->category());
     }
     else
     {
@@ -281,7 +281,7 @@ private:
   {
     unsigned type = jsType(expression);
     if (!hasOption(SVGOption::NotInteractive) || 
-      (type != static_cast<unsigned>(Variable::Type::Monoflop) && (type != static_cast<unsigned>(Variable::Type::Output))))
+      (type != static_cast<unsigned>(Var::Category::Monoflop) && (type != static_cast<unsigned>(Var::Category::Output))))
     {
       jsOut << "data[" << jsType(expression) << "][" << jsTypeIndex(expression) << "]= ";
 
@@ -301,8 +301,8 @@ private:
         {
         case plc::Term::Type::Identifier:
         {
-          const Variable& v = plcAst.getVariable(t.variable()->name());
-          jsOut << "data[" << static_cast<int>(v.type()) << "][" << v.index() << ']';
+          const VariableType& v = plcAst.getVariable(t.variable()->name());
+          jsOut << "data[" << static_cast<int>(v.category()) << "][" << v.index() << ']';
         }
         break;
 

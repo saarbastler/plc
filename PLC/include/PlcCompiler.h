@@ -9,28 +9,28 @@
 
 namespace plc
 {
-  inline Instruction readInstruction(Variable::Type type)
+  inline Instruction readInstruction(Var::Category category)
   {
-    switch (type)
+    switch (category)
     {
-    case Variable::Type::Input:     return Instruction::ReadInput;
-    case Variable::Type::Output:    return Instruction::ReadOutput;
-    case Variable::Type::Monoflop:  return Instruction::ReadMonoflop;
-    case Variable::Type::Flag:      return Instruction::ReadFlag;
+    case Var::Category::Input:     return Instruction::ReadInput;
+    case Var::Category::Output:    return Instruction::ReadOutput;
+    case Var::Category::Monoflop:  return Instruction::ReadMonoflop;
+    case Var::Category::Flag:      return Instruction::ReadFlag;
     default:
-      throw PlcAstException("undefined Variable Type: %d", int(type));
+      throw PlcAstException("undefined Variable Type: %d", int(category));
     }
   }
 
-  inline Instruction writeInstruction(Variable::Type type)
+  inline Instruction writeInstruction(Var::Category category)
   {
-    switch (type)
+    switch (category)
     {
-    case Variable::Type::Output:    return Instruction::WriteOuput;
-    case Variable::Type::Monoflop:  return Instruction::WriteMonoflop;
-    case Variable::Type::Flag:      return Instruction::WriteFlag;
+    case Var::Category::Output:    return Instruction::WriteOuput;
+    case Var::Category::Monoflop:  return Instruction::WriteMonoflop;
+    case Var::Category::Flag:      return Instruction::WriteFlag;
     default:
-      throw PlcAstException("undefined Variable Type: %d", int(type));
+      throw PlcAstException("undefined Variable Type: %d", int(category));
     }
   }
 
@@ -43,9 +43,9 @@ namespace plc
     {
       if (term.type() == Term::Type::Identifier)
       {
-        const Variable& variable = plcAst.getVariable(term.variable()->name());
+        const VariableType& variable = plcAst.getVariable(term.variable()->name());
 
-        emitter(readInstruction(variable.type()), variable.index());
+        emitter(readInstruction(variable.category()), variable.index());
         if (term.unary() == Term::Unary::Not)
           emitter(Instruction::OperationNot, 0);
       }
@@ -59,18 +59,27 @@ namespace plc
       if (firstTerm)
         firstTerm = false;
       else
-        emitter(expression.op() == Expression::Operator::And ? Instruction::OperationAnd : Instruction::OperationOr, 0);
+        switch (expression.op())
+        {
+        case Expression::Operator::And:
+          emitter(Instruction::OperationAnd, 0);
+          break;
+        case Expression::Operator::Or:
+          emitter(Instruction::OperationOr, 0);
+        default:
+          throw PlcException("undefined Operator: %d", expression.op());
+        }
     }
   }
 
-  inline void compile(const PlcAst& plcAst, const Expression& expression, const Variable& variable, std::vector<Operation>& instructions)
+  inline void compile(const PlcAst& plcAst, const Expression& expression, const VariableType& variable, std::vector<Operation>& instructions)
   {
     compile(plcAst, expression, [&instructions](plc::Instruction instruction, unsigned argument) 
     {
       instructions.emplace_back(Operation{ instruction, argument });
     });
 
-    instructions.emplace_back(Operation{ writeInstruction(variable.type()), variable.index() });
+    instructions.emplace_back(Operation{ writeInstruction(variable.category()), variable.index() });
   }
 
   inline void compile(const PlcAst& plcAst, std::vector<Operation>& instructions)
