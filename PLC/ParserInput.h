@@ -16,14 +16,20 @@ public:
     if (stack)
       return stack.pop();
 
+    char ch = 0;
     if (in)
     {
       int i = in.get();
       if (i > 0)
-        return char(i);
+      {
+        ch = char(i);
+
+        if (ch == '\n')
+          ++lineNo;
+      }
     }
 
-    return 0;
+    return ch;
   }
 
   char nextIgnoreBlank()
@@ -42,7 +48,14 @@ public:
     stack.push(c);
   }
 
+  unsigned getLineNo()
+  {
+    return lineNo;
+  }
+
 private:
+
+  unsigned lineNo = 1;
 
   std::istream& in;
 

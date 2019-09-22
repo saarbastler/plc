@@ -2,37 +2,11 @@
 #define _INCLUDE_PARSER_H_
 
 #include <sstream>
-#include <exception>
-#include <cstdarg>
-#include <stdio.h>
+
+#include <ParserException.h>
 
 #include "ParserInput.h"
 #include "ParserResult.h"
-
-class ParserException : public std::exception
-{
-public:
-  ParserException(const char *format, ...)
-  {
-    char buffer[1000];
-
-    std::va_list list;
-    va_start(list, format);
-    vsnprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, list);
-    va_end(list);
-
-    message = buffer;
-  }
-
-  virtual char const* what() const noexcept
-  {
-    return message.c_str();
-  }
-
-private:
-
-  std::string message;
-};
 
 template<unsigned CHAR_STACKSIZE, unsigned PARSER_STACKSIZE>
 class Parser
@@ -124,6 +98,11 @@ public:
     stack.push(parserResult);
   }
 
+  unsigned getLineNo()
+  {
+    return parserInput.getLineNo();
+  }
+
 protected:
 
   char parseComment()
@@ -146,7 +125,7 @@ protected:
       {
         c2 = parserInput.nextChar();
         if (c2 == 0)
-          throw ParserException("EOF in Comment");
+          throw ParserException(getLineNo(), "EOF in Comment");
 
         if(c == '*' && c2 == '/')
           return parserInput.nextIgnoreBlank();
@@ -165,5 +144,6 @@ protected:
   ParserInput<CHAR_STACKSIZE>& parserInput;
   Stack<ParserResult,PARSER_STACKSIZE> stack;
 };
+
 #endif // _INCLUDE_PARSER_H_
 

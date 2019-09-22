@@ -18,7 +18,7 @@ public:
 
   static plc::Expression::Operator toOperatorMock(ParserResult& parserResult)
   {
-    return toOperator(parserResult);
+    return toOperator(0, parserResult);
   }
 
   void parseExpressionMock(std::unique_ptr<plc::Expression>& expression)

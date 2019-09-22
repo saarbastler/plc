@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <array>
 
 class Var
 {
@@ -11,6 +12,14 @@ public:
   {
     Input, Output, Monoflop, Flag
   };
+
+  static const char *categoryText(Category category)
+  {
+    static const std::array<const char *, 4> texts{ "Input", "Output", "Timer", "Flag" };
+
+    return texts[int(category)];
+  }
+
 };
 
 template<typename ExpressiontType>

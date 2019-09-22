@@ -5,7 +5,7 @@
 
 using VariableType = Variable<plc::Expression>;
 
-class PlcExpressionParserMock : public PlcParser<2, 3, plc::Expression>
+class PlcExpressionParserMock : public PlcParser<2, 3, plc::Expression, PlcAst>
 {
 public:
 

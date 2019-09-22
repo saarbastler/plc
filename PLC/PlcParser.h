@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <functional>
 
 #include <boost/algorithm/string.hpp>
 
@@ -10,13 +11,43 @@
 
 #include <PlcAbstractSyntaxTree.h>
 
-template<unsigned CHAR_STACKSIZE, unsigned PARSER_STACKSIZE, typename ExpressionType>
+template<unsigned CHAR_STACKSIZE, unsigned PARSER_STACKSIZE, typename ExpressionType, typename ASTType>
 class PlcParser
 {
 public:
   using VariableType = Variable<ExpressionType>;
+  using ParseRemaining = std::function<void(const std::string&)>;
 
-  PlcParser(Parser<CHAR_STACKSIZE, PARSER_STACKSIZE>& parser, PlcAbstractSyntaxTree<ExpressionType>& plcAst) : parser(parser), plcAst(plcAst) {}
+  PlcParser(Parser<CHAR_STACKSIZE, PARSER_STACKSIZE>& parser, ASTType& ast) : parser(parser), ast(ast) {}
+
+  void parseVariables(ParseRemaining&& parseRemaining)
+  {
+    ParserResult parserResult;
+    for (;;)
+    {
+      if (parser.next(parserResult).type() == ParserResult::Type::Identifier)
+      {
+        if (boost::algorithm::iequals(parserResult.text(), "inputs"))
+          parseVariables(Var::Category::Input);
+        else if (boost::algorithm::iequals(parserResult.text(), "outputs"))
+          parseVariables(Var::Category::Output);
+        else if (boost::algorithm::iequals(parserResult.text(), "monoflops") || boost::algorithm::iequals(parserResult.text(), "timer"))
+          parseVariables(Var::Category::Monoflop);
+        else if (boost::algorithm::iequals(parserResult.text(), "flags"))
+          parseVariables(Var::Category::Flag);
+        else
+          parseRemaining(parserResult.text());
+      }
+      else if (!parserResult)
+      {
+        break;
+      }
+      else
+      {
+        throw ParserException(parser.getLineNo(), "Syntax Error");
+      }
+    }
+  }
 
 protected:
 
@@ -24,22 +55,22 @@ protected:
   {
     ParserResult parserResult;
     if (!parser.next(parserResult).is(ParserResult::Type::Char, ':'))
-      throw ParserException("missing ':' after in variable declaration");
+      throw ParserException(parser.getLineNo(), "missing ':' after in variable declaration");
 
     for (;;)
     {
       if (parser.next(parserResult).type() != ParserResult::Type::Identifier)
-        throw ParserException("missing identifier in variable declaration");
+        throw ParserException(parser.getLineNo(), "missing identifier in variable declaration");
 
-      if (plcAst.variableExists(parserResult.text()))
-        throw ParserException("Variable '%s' already declared", parserResult.text().c_str());
+      if (ast.variableExists(parserResult.text()))
+        throw ParserException(parser.getLineNo(), "Variable '%s' already declared", parserResult.text().c_str());
 
       uint64_t timeArg = (category == Var::Category::Monoflop) ? 30 : 0;
       ParserResult parserResult2;
       if (parser.next(parserResult2).is(ParserResult::Type::Char, '(') && category == Var::Category::Monoflop)
       {
         if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
-          throw ParserException("missing Integer Value after Variable '%s' (", parserResult.text().c_str());
+          throw ParserException(parser.getLineNo(), "missing Integer Value after Variable '%s' (", parserResult.text().c_str());
 
         timeArg = parserResult2.intValue();
 
@@ -50,23 +81,23 @@ protected:
         else if (parserResult2.is(ParserResult::Type::Identifier, "h"))
           timeArg *= 1800;
         else
-          throw ParserException("missing Time unit (s,min,h) after Variable '%s' (%d", parserResult.text().c_str(), timeArg);
+          throw ParserException(parser.getLineNo(), "missing Time unit (s,min,h) after Variable '%s' (%d", parserResult.text().c_str(), timeArg);
 
         if (timeArg > 65535)
-          throw ParserException("Variable '%s' Time value overflow, max is 131071 s", parserResult.text().c_str());
+          throw ParserException(parser.getLineNo(), "Variable '%s' Time value overflow, max is 131071 s", parserResult.text().c_str());
 
         if (!parser.next(parserResult2).is(ParserResult::Type::Char, ')'))
-          throw ParserException("missing ')' after Variable '%s'", parserResult.text().c_str());
+          throw ParserException(parser.getLineNo(), "missing ')' after Variable '%s'", parserResult.text().c_str());
 
         parser.next(parserResult2);
       }
 
       if (!parserResult2.is(ParserResult::Type::Operator, ParserResult::Operator::Assign))
-        throw ParserException("missing '=' after Variable '%s'", parserResult.text().c_str());
+        throw ParserException(parser.getLineNo(), "missing '=' after Variable '%s'", parserResult.text().c_str());
       if (parser.next(parserResult2).type() != ParserResult::Type::Integer)
-        throw ParserException("missing integer value after Variable '%s'=", parserResult.text().c_str());
+        throw ParserException(parser.getLineNo(), "missing integer value after Variable '%s'=", parserResult.text().c_str());
 
-      plcAst.addVariable(VariableType(parserResult.text(), category, unsigned(parserResult2.intValue()), unsigned(timeArg)));
+      ast.addVariable(VariableType(parserResult.text(), category, unsigned(parserResult2.intValue()), unsigned(timeArg)));
 
       if (parser.next(parserResult).is(ParserResult::Type::Char, ','))
         continue;
@@ -74,12 +105,12 @@ protected:
       if (parserResult.is(ParserResult::Type::Char, ';'))
         break;
 
-      throw ParserException("missing ',' in Variable list");
+      throw ParserException(parser.getLineNo(), "missing ',' in Variable list");
     }
   }
 
   Parser<CHAR_STACKSIZE, PARSER_STACKSIZE>& parser;
-  PlcAbstractSyntaxTree<ExpressionType>& plcAst;
+  ASTType& ast;
 };
 
 #endif // _INCLUDE_PLC_PARSER_H_

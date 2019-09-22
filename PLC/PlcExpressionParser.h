@@ -2,9 +2,10 @@
 #define _INCLUDE_PLC_EXPRESSION_PARSER_H_
 
 #include <iostream>
-#include <unordered_map>
 
 #include <boost/algorithm/string.hpp>
+
+#include <ParserException.h>
 
 #include "Parser.h"
 #include "Variable.h"
@@ -12,41 +13,20 @@
 #include "PlcParser.h"
 
 template<unsigned CHAR_STACKSIZE, unsigned PARSER_STACKSIZE>
-class PlcExpressionParser : PlcParser<CHAR_STACKSIZE, PARSER_STACKSIZE, plc::Expression>
+class PlcExpressionParser : PlcParser<CHAR_STACKSIZE, PARSER_STACKSIZE, plc::Expression, PlcAst>
 {
 public:
-  using Super = PlcParser<CHAR_STACKSIZE, PARSER_STACKSIZE, plc::Expression>;
   using VariableType = Variable<plc::Expression>;
+  using Super = PlcParser<CHAR_STACKSIZE, PARSER_STACKSIZE, plc::Expression, PlcAst>;
 
-  PlcExpressionParser(Parser<CHAR_STACKSIZE,PARSER_STACKSIZE>& parser, PlcAst& plcAst) : Super(parser, plcAst) {}
+  PlcExpressionParser(Parser<CHAR_STACKSIZE,PARSER_STACKSIZE>& parser, PlcAst& ast) : Super(parser, ast) {}
 
   void parse()
   {
-    ParserResult parserResult;
-    for (;;)
+    Super::parseVariables([this](const std::string& identifier)
     {
-      if (Super::parser.next(parserResult).type() == ParserResult::Type::Identifier)
-      {
-        if (boost::algorithm::iequals(parserResult.text(), "inputs"))
-          Super::parseVariables(Var::Category::Input);
-        else if (boost::algorithm::iequals(parserResult.text(), "outputs"))
-          Super::parseVariables(Var::Category::Output);
-        else if (boost::algorithm::iequals(parserResult.text(), "monoflops") || boost::algorithm::iequals(parserResult.text(), "timer"))
-          Super::parseVariables(Var::Category::Monoflop);
-        else if (boost::algorithm::iequals(parserResult.text(), "flags"))
-          Super::parseVariables(Var::Category::Flag);
-        else
-          parseEquation(parserResult.text());
-      }
-      else if (!parserResult)
-      {
-        break;
-      }
-      else
-      {
-        throw ParserException("Syntax Error");
-      }
-    }
+      parseEquation(identifier);
+    });
   }
 
 protected:
@@ -56,7 +36,7 @@ protected:
     ParserResult parserResult;
     if (Super::parser.next(parserResult).type() == ParserResult::Type::Identifier)
     {
-      term = Super::plcAst.getVariable(parserResult.text());
+      term = Super::ast.getVariable(parserResult.text());
     }
     else if (parserResult.is(ParserResult::Type::Char, '!'))
     {
@@ -69,25 +49,25 @@ protected:
       parseExpression(expression);
 
       if (!Super::parser.next(parserResult).is(ParserResult::Type::Char, ')'))
-        throw ParserException("missing closing ')'");
+        throw ParserException(Super::parser.getLineNo(), "missing closing ')'");
 
       term = expression;
     }
     else
-      throw ParserException("Syntax Error");
+      throw ParserException(Super::parser.getLineNo(), "Syntax Error");
   }
 
-  static plc::Expression::Operator toOperator(ParserResult& parserResult)
+  static plc::Expression::Operator toOperator(unsigned lineNo, ParserResult& parserResult)
   {
     if (parserResult.type() != ParserResult::Type::Char)
-      throw ParserException("Syntax Error, Operator expected, but got '%s'", parserResult.text().c_str());
+      throw ParserException(lineNo, "Syntax Error, Operator expected, but got '%s'", parserResult.text().c_str());
 
     switch (parserResult.intValue())
     {
     case '&': return plc::Expression::Operator::And;
     case '|': return plc::Expression::Operator::Or;
     default:
-      throw ParserException("Syntax Error, undefined Operator: '%s'", parserResult.text().c_str());
+      throw ParserException(lineNo, "Syntax Error, undefined Operator: '%s'", parserResult.text().c_str());
     }
   }
 
@@ -108,7 +88,7 @@ protected:
         break;
       }
 
-      plc::Expression::Operator op = toOperator(parserResult);
+      plc::Expression::Operator op = toOperator(Super::parser.getLineNo(), parserResult);
       if (!*expression || expression->op() == op)
       {
         expression->op() = op;
@@ -154,19 +134,19 @@ protected:
           assignment = plc::Expression::Assignment::Reset;
           break;
         default:
-          throw ParserException("missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
+          throw ParserException(Super::parser.getLineNo(), "missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
       }
     else
-      throw ParserException("missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
+      throw ParserException(Super::parser.getLineNo(), "missing '=', '+=' or '-=' after variable '%s' equation", name.c_str());
 
-    VariableType& variable = Super::plcAst.getVariable(name);
+    VariableType& variable = Super::ast.getVariable(name);
     std::unique_ptr<plc::Expression> expression(new plc::Expression(variable.index(), assignment));
     parseExpression(expression);
     if (!Super::parser.next(parserResult).is(ParserResult::Type::Char, ';'))
-      throw ParserException("missing ';' after expression");
+      throw ParserException(Super::parser.getLineNo(), "missing ';' after expression");
 
     if (variable.expression().operator bool())
-      throw ParserException("Two Expressions are assigned to Variable '%s'", name);
+      throw ParserException(Super::parser.getLineNo(), "Two Expressions are assigned to Variable '%s'", name);
 
     variable.expression().swap(expression);
     variable.expression()->setVariable(&variable);

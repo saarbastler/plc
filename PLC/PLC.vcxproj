@@ -296,6 +296,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -311,6 +312,7 @@
       <PreprocessorDefinitions>LIBRARY;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -326,6 +328,7 @@
       <PreprocessorDefinitions>PARSER_TESTS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -400,6 +403,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -419,6 +423,7 @@
       <PreprocessorDefinitions>LIBRARY;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -438,6 +443,7 @@
       <PreprocessorDefinitions>PARSER_TESTS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -447,18 +453,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\ParserException.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="plc.cpp" />
     <ClCompile Include="plc2svgbase.cpp" />
     <ClCompile Include="PlcExpression.cpp" />
     <ClCompile Include="svgHelper.cpp" />
+    <ClCompile Include="Tests\TestAwlExpression.cpp" />
+    <ClCompile Include="Tests\TestAwlParser.cpp" />
     <ClCompile Include="Tests\TestParserInput.cpp" />
     <ClCompile Include="Tests\TestParser.cpp" />
-    <ClCompile Include="Tests\TextPlcExpressionParser.cpp" />
+    <ClCompile Include="Tests\TestPlcExpressionParser.cpp" />
     <ClCompile Include="Tests\TestStack.cpp" />
     <ClCompile Include="Tests\TestPlcParser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AwlAst.h" />
+    <ClInclude Include="AwlExpression.h" />
     <ClInclude Include="include/AvrPlc.h" />
     <ClInclude Include="include\PlcAst.h" />
     <ClInclude Include="include\PlcAstException.h" />
@@ -472,6 +483,7 @@
     <ClInclude Include="include/PlcException.h" />
     <ClInclude Include="include/PlcExpression.h" />
     <ClInclude Include="plc2svgbase.h" />
+    <ClInclude Include="PlcAwlParser.h" />
     <ClInclude Include="PlcExpressionParser.h" />
     <ClInclude Include="include/PlcSimulator.h" />
     <ClInclude Include="PlcParser.h" />
