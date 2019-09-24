@@ -29,8 +29,10 @@ namespace plc
 {
   enum class Instruction
   {
-    ReadInput, ReadOutput, ReadFlag, ReadMonoflop,
-    WriteOuput, WriteFlag, WriteMonoflop,
+    ReadOutput, ReadFlag, ReadTimer, ReadInput,
+    WriteOutput, WriteFlag, 
+    SetOutput, SetFlag, SetTimer, 
+    ResetOutput, ResetFlag, ResetTimer,
     OperationAnd, OperationOr, OperationNot
   };
 
@@ -87,40 +89,82 @@ public:
   template<unsigned STACKSIZE>
   bool execute(const std::vector<plc::Operation>& instructions)
   {
+
     Stack<bool, STACKSIZE> stack;
     for (const plc::Operation& operation : instructions)
     {
+      bool outValue = false;
       switch (operation.instruction)
       {
       case plc::Instruction::ReadInput:
-        stack.push(io(IOType::Input, operation.argument));
+        outValue = io(IOType::Input, operation.argument);
+        stack.push(outValue);
         break;
       case plc::Instruction::ReadOutput:
-        stack.push(io(IOType::Output, operation.argument));
+        outValue= io(IOType::Output, operation.argument);
+        stack.push(outValue);
         break;
       case plc::Instruction::ReadFlag:
-        stack.push(io(IOType::Flag, operation.argument));
+        outValue= io(IOType::Flag, operation.argument);
+        stack.push(outValue);
         break;
       case plc::Instruction::ReadMonoflop:
-        stack.push(io(IOType::Monoflop, operation.argument));
+        outValue= io(IOType::Monoflop, operation.argument);
+        stack.push(outValue);
         break;
       case plc::Instruction::WriteOuput:
-        io(IOType::Output, operation.argument) = stack.pop();
+        outValue = stack.pop();
+        io(IOType::Output, operation.argument) = outValue;
         break;
       case plc::Instruction::WriteFlag:
-        io(IOType::Flag, operation.argument) = stack.pop();
+        outValue = stack.pop();
+        io(IOType::Flag, operation.argument) = outValue;
         break;
-      case plc::Instruction::WriteMonoflop:
-        io(IOType::Monoflop, operation.argument) = stack.pop();
+      //case plc::Instruction::WriteMonoflop:
+      //  outValue = stack.pop();
+      //  io(IOType::Monoflop, operation.argument) = outValue;
+      //  break;
+      case plc::Instruction::SetOuput:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Output, operation.argument) = outValue;
+        break;
+      case plc::Instruction::SetFlag:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Flag, operation.argument) = outValue;
+        break;
+      case plc::Instruction::SetTimer:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Monoflop, operation.argument) = outValue;
+        break;
+      case plc::Instruction::ResetOuput:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Output, operation.argument) = !outValue;
+        break;
+      case plc::Instruction::ResetFlag:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Flag, operation.argument) = !outValue;
+        break;
+      case plc::Instruction::ResetTimer:
+        outValue = stack.pop();
+        if (outValue)
+          io(IOType::Monoflop, operation.argument) = !outValue;
         break;
       case plc::Instruction::OperationAnd:
-        stack.push(stack.pop() & stack.pop());
+        outValue = stack.pop() & stack.pop();
+        stack.push(outValue);
         break;
       case plc::Instruction::OperationOr:
-        stack.push(stack.pop() | stack.pop());
+        outValue = stack.pop() | stack.pop();
+        stack.push(outValue);
         break;
       case plc::Instruction::OperationNot:
-        stack.push(!stack.pop());
+        outValue = !stack.pop();
+        stack.push(outValue);
         break;
       default:
         std::cout << "UNDEFINED: " << int(operation.instruction) << std::endl;

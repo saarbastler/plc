@@ -3,7 +3,7 @@
 #define BOOST_TEST_MODULE PARSER_TESTS
 
 #include <boost/test/unit_test.hpp>
-#include "../Stack.h"
+#include <Stack.h>
 
 BOOST_AUTO_TEST_CASE(Stack_Tests)
 {

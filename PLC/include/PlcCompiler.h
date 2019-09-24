@@ -15,7 +15,7 @@ namespace plc
     {
     case Var::Category::Input:     return Instruction::ReadInput;
     case Var::Category::Output:    return Instruction::ReadOutput;
-    case Var::Category::Monoflop:  return Instruction::ReadMonoflop;
+    case Var::Category::Monoflop:  return Instruction::ReadTimer;
     case Var::Category::Flag:      return Instruction::ReadFlag;
     default:
       throw PlcAstException("undefined Variable Type: %d", int(category));
@@ -26,8 +26,8 @@ namespace plc
   {
     switch (category)
     {
-    case Var::Category::Output:    return Instruction::WriteOuput;
-    case Var::Category::Monoflop:  return Instruction::WriteMonoflop;
+    case Var::Category::Output:    return Instruction::WriteOutput;
+    case Var::Category::Monoflop:  return Instruction::SetTimer;
     case Var::Category::Flag:      return Instruction::WriteFlag;
     default:
       throw PlcAstException("undefined Variable Type: %d", int(category));
@@ -120,17 +120,35 @@ namespace plc
       case plc::Instruction::ReadFlag:
         avrArgument(avrplc::READ_FLAG, operation.argument, avrplc);
         break;
-      case plc::Instruction::ReadMonoflop:
+      case plc::Instruction::ReadTimer:
         avrArgument(avrplc::READ_MONOFLOP, operation.argument, avrplc);
         break;
-      case plc::Instruction::WriteOuput:
+      case plc::Instruction::WriteOutput:
         avrArgument(avrplc::WRITE_OUTPUT, operation.argument, avrplc);
         break;
       case plc::Instruction::WriteFlag:
         avrArgument(avrplc::WRITE_FLAG, operation.argument, avrplc);
         break;
-      case plc::Instruction::WriteMonoflop:
-        avrArgument(avrplc::WRITE_MONOFLOP, operation.argument, avrplc);
+      //case plc::Instruction::WriteMonoflop:
+      //  avrArgument(avrplc::WRITE_MONOFLOP, operation.argument, avrplc);
+      //  break;
+      case plc::Instruction::SetOutput:
+        avrArgument(avrplc::SET_OUTPUT, operation.argument, avrplc);
+        break;
+      case plc::Instruction::SetFlag:
+        avrArgument(avrplc::SET_FLAG, operation.argument, avrplc);
+        break;
+      case plc::Instruction::SetTimer:
+        avrArgument(avrplc::SET_MONOFLOP, operation.argument, avrplc);
+        break;
+      case plc::Instruction::ResetOutput:
+        avrArgument(avrplc::RESET_OUTPUT, operation.argument, avrplc);
+        break;
+      case plc::Instruction::ResetFlag:
+        avrArgument(avrplc::RESET_FLAG, operation.argument, avrplc);
+        break;
+      case plc::Instruction::ResetTimer:
+        avrArgument(avrplc::RESET_MONOFLOP, operation.argument, avrplc);
         break;
       case plc::Instruction::OperationAnd:
         avrArgument(avrplc::OPERATION, avrplc::AND, avrplc);

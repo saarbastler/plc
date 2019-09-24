@@ -2,7 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../AwlExpression.h"
+#include <AwlExpression.h>
 
 using Instr = awl::Expression::Instruction;
 using Cat = Var::Category;

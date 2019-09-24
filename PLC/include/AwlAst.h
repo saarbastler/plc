@@ -5,7 +5,7 @@
 #include <utility>
 #include <PlcAbstractSyntaxTree.h>
 
-#include "AwlExpression.h"
+#include <AwlExpression.h>
 
 class AwlAst : public PlcAbstractSyntaxTree<awl::Expression>
 {
