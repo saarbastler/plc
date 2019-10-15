@@ -146,7 +146,7 @@ protected:
       throw ParserException(Super::parser.getLineNo(), "missing ';' after expression");
 
     if (variable.expression().operator bool())
-      throw ParserException(Super::parser.getLineNo(), "Two Expressions are assigned to Variable '%s'", name);
+      throw ParserException(Super::parser.getLineNo(), "Two Expressions are assigned to Variable '%s'", name.c_str());
 
     variable.expression().swap(expression);
     variable.expression()->setVariable(&variable);
